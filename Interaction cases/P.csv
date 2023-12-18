@@ -1,0 +1,940 @@
+Software,Parameter,Code Snippet,Code Pattern,Overall Impact,Effect on Software Behavior,How to Control Software Behavior,Special Effect on Software,Bad consequences,Log Information,On-the-fly Update,"The ""Crisis"" Behind Specific Interactions"
+hbase,hbase.client.max.total.tasks,"    BlockingQueue<Runnable> workQueue =
+      new LinkedBlockingQueue<>(threads * conf.getInt(HConstants.HBASE_CLIENT_MAX_TOTAL_TASKS,
+        HConstants.DEFAULT_HBASE_CLIENT_MAX_TOTAL_TASKS));
+    ThreadPoolExecutor tpe = new ThreadPoolExecutor(threads, threads, keepAliveTime,
+      TimeUnit.SECONDS, workQueue,
+      new ThreadFactoryBuilder().setDaemon(true).setNameFormat(toString() + ""-shared-%d"").build());",p,/,/,/,/,/,/,no,/
+hbase,hbase.coprocessor.enabled,"    if (!coprocessorsEnabled) {
+      return;
+    }",p,/,/,/,/,/,/,no,/
+hbase,hbase.hregion.memstore.mslab.enabled,"    if (conf.getBoolean(MemStoreLAB.USEMSLAB_KEY, MemStoreLAB.USEMSLAB_DEFAULT)) {
+      // if user requested to work with MSLABs (whether on- or off-heap), then the
+      // immutable segments are going to use CellChunkMap as their index
+      indexType = IndexType.CHUNK_MAP;
+    } else {
+      indexType = IndexType.ARRAY_MAP;
+    }",p,/,/,/,/,/,/,no,/
+hbase,hbase.http.max.threads,QueuedThreadPool threadPool = new QueuedThreadPool(maxThreads);,p,/,/,/,/,/,/,no,/
+hbase,hbase.master.fileSplitTimeout,"    long fileSplitTimeout = conf.getLong(""hbase.master.fileSplitTimeout"",
+      conf.getLong(""hbase.regionserver.fileSplitTimeout"", 600000));
+    try {
+      boolean stillRunning = !threadPool.awaitTermination(fileSplitTimeout, TimeUnit.MILLISECONDS);",p,/,/,/,/,/,/,no,/
+hbase,hbase.master.loadbalance.bytable,if (isByTable) {,p,/,/,/,/,/,/,no,/
+hbase,hbase.regionserver.inmemory.compaction.pool.size,"      this.threadPoolExecutor = new TrackingThreadPoolExecutor(
+        // setting maxPoolSize > corePoolSize has no effect since we use an unbounded task queue.
+        config.getCorePoolSize(), config.getCorePoolSize(), config.getKeepAliveTimeMillis(),
+        TimeUnit.MILLISECONDS, q);",p,/,/,/,/,/,/,no,/
+hbase,hbase.snapshot.enabled,"if (snapshotEnabled) {
+      // Inject snapshot cleaners, if snapshot.enable is true
+      hfileCleaners.add(SnapshotHFileCleaner.class.getName());
+      hfileCleaners.add(HFileLinkCleaner.class.getName());
+      // If sync acl to HDFS feature is enabled, then inject the cleaner
+      if (SnapshotScannerHDFSAclHelper.isAclSyncToHdfsEnabled(conf)) {
+        hfileCleaners.add(SnapshotScannerHDFSAclCleaner.class.getName());
+      }
+
+      // Set cleaners conf
+      conf.setStrings(HFileCleaner.MASTER_HFILE_CLEANER_PLUGINS,
+        hfileCleaners.toArray(new String[hfileCleaners.size()]));
+      conf.setStrings(HConstants.HBASE_MASTER_LOGCLEANER_PLUGINS,
+        logCleaners.toArray(new String[logCleaners.size()]));
+    }",p,/,/,/,/,/,/,no,/
+hbase,hbase.storescanner.parallel.seek.threads,"      this.threadPoolExecutor = new TrackingThreadPoolExecutor(
+        // setting maxPoolSize > corePoolSize has no effect since we use an unbounded task queue.
+        config.getCorePoolSize(), config.getCorePoolSize(), config.getKeepAliveTimeMillis(),
+        TimeUnit.MILLISECONDS, q);",p,/,/,/,/,/,/,no,/
+hbase,hbase.thrift.minWorkerThreads,"    executorService = new THBaseThreadPoolExecutor(minWorkerThreads, maxWorkerThreads,
+      options.threadKeepAliveTimeSec, TimeUnit.SECONDS, this.callQueue, tfb.build(), metrics);",p,/,/,/,/,/,/,no,/
+hdfs,dfs.block.scanner.skip.recent.accessed,"    } else if (conf.skipRecentAccessed) {
+      // Check the access time of block file to avoid scanning recently
+      // changed blocks, reducing disk IO.
+      try {
+        BlockLocalPathInfo blockLocalPathInfo =
+            volume.getDataset().getBlockLocalPathInfo(block);
+        BasicFileAttributes attr = Files.readAttributes(
+            new File(blockLocalPathInfo.getBlockPath()).toPath(),
+            BasicFileAttributes.class);
+        if (System.currentTimeMillis() - attr.lastAccessTime().
+            to(TimeUnit.MILLISECONDS) < conf.scanPeriodMs) {
+          return null;
+        }
+      } catch (IOException ioe) {
+        LOG.debug(""Failed to get access time of block {}"",
+            block, ioe);
+      }
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.client.block.reader.remote.buffer.size,"    final DataOutputStream out = new DataOutputStream(new BufferedOutputStream(
+        peer.getOutputStream(), bufferSize));",p,/,/,/,/,/,/,no,/
+hdfs,dfs.client.deadnode.detection.probe.deadnode.threads,"    probeDeadNodesThreadPool = Executors.newFixedThreadPool(
+        deadNodeDetectDeadThreads, new Daemon.DaemonFactory());",p,/,/,/,/,/,/,no,/
+hdfs,dfs.client.domain.socket.data.traffic,"    if (!conf.isDomainSocketDataTraffic() &&
+        (!conf.isShortCircuitLocalReads() || conf.isUseLegacyBlockReaderLocal())) {
+      return PathInfo.NOT_CONFIGURED;
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.client.read.use.cache.priority,"    if (dfsClient.getConf().isReadUseCachePriority()) {
+      DatanodeInfo[] cachedLocs = block.getCachedLocations();
+      if (cachedLocs != null) {
+        for (int i = 0; i < cachedLocs.length; i++) {
+          if (isValidNode(cachedLocs[i], ignoredNodes)) {
+            chosenNode = cachedLocs[i];
+            break;
+          }
+        }
+      }
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.client.refresh.read-block-locations.threads,"this.refreshThreadPool = Executors.newFixedThreadPool(rpcThreads, new Daemon.DaemonFactory() {",p,/,/,/,/,/,/,no,/
+hdfs,dfs.datanode.directoryscan.threads,"  int threads =
+        conf.getInt(DFSConfigKeys.DFS_DATANODE_DIRECTORYSCAN_THREADS_KEY,
+            DFSConfigKeys.DFS_DATANODE_DIRECTORYSCAN_THREADS_DEFAULT);",p,/,/,/,/,/,/,no,/
+hdfs,dfs.datanode.fixed.volume.size,"      if (fixedSizeVolume) {
+        cachedCapacity = this.usage.getCapacity();
+      }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.datanode.fsdatasetcache.max.threads.per.volume,"    ThreadPoolExecutor executor = new ThreadPoolExecutor(
+        1, maxNumThreads,
+        60, TimeUnit.SECONDS,
+        new LinkedBlockingQueue<Runnable>(),
+        workerFactory);",p,/,/,/,/,/,/,no,/
+hdfs,dfs.datanode.peer.metrics.min.outlier.detection.samples,"      final Map<String, Double> stats =
+          sendPacketDownstreamRollingAverages.getStats(minOutlierDetectionSamples);",p,/,/,/,/,/,/,yes,/
+hdfs,dfs.datanode.pmem.cache.recovery,"    if (getDnConf().getPmemCacheRecoveryEnabled()) {
+      final Map<ExtendedBlockId, MappableBlock> keyToMappableBlock =
+          PmemVolumeManager.getInstance().recoverCache(bpid, cacheLoader);
+      Set<Map.Entry<ExtendedBlockId, MappableBlock>> entrySet
+          = keyToMappableBlock.entrySet();
+      for (Map.Entry<ExtendedBlockId, MappableBlock> entry : entrySet) {
+        mappableBlockMap.put(entry.getKey(),
+            new Value(keyToMappableBlock.get(entry.getKey()), State.CACHED));
+        numBlocksCached.increment();
+        dataset.datanode.getMetrics().incrBlocksCached(1);
+      }
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.datanode.sync.behind.writes.in.background,"          if (syncBehindWritesInBackground) {
+            this.datanode.getFSDataset().submitBackgroundSyncFileRangeRequest(
+                block, streams, lastCacheManagementOffset,
+                offsetInBlock - lastCacheManagementOffset,
+                SYNC_FILE_RANGE_WRITE);
+          }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.ha.automatic-failover.enabled,"    if (autoFailoverEnabled) {
+      int port = DFSZKFailoverController.getZkfcPort(targetConf);
+      if (port != 0) {
+        setZkfcPort(port);
+      }
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.image.compress,"    if (!compressImage) {
+      return createNoopCompression();
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.mover.movedWinWidth,this.movedBlocks = new MovedBlocks<StorageGroup>(movedWinWidth);,p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.acls.enabled,"  private static void checkAclsConfigFlag(FSDirectory fsd) throws AclException {
+    if (!fsd.isAclsEnabled()) {
+      throw new AclException(String.format(
+          ""The ACL operation has been rejected.  ""
+              + ""Support for ACLs has been disabled by setting %s to false."",
+          DFSConfigKeys.DFS_NAMENODE_ACLS_ENABLED_KEY));
+    }
+  }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.block-placement-policy.exclude-slow-nodes.enabled,"    if (dataNodePeerStatsEnabled && excludeSlowNodesEnabled) {
+      Set<String> slowNodesUuidSet = DatanodeManager.getSlowNodesUuidSet();
+      if (slowNodesUuidSet.contains(node.getDatanodeUuid())) {
+        logNodeIsNotChosen(node, NodeNotChosenReason.NODE_SLOW);
+        return false;
+      }
+    }",p,/,/,/,/,/,/,yes,/
+hdfs,dfs.namenode.edits.qjournals.resolution-enabled,      if (resolveNeeded) {,p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.path.based.cache.block.map.allocation.percent,"    this.cachedBlocks = enabled ? new LightWeightGSet<CachedBlock, CachedBlock>(
+          LightWeightGSet.computeCapacity(cachedBlocksPercent,
+              ""cachedBlocks"")) : new LightWeightGSet<>(0);",p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.read.considerStorageType,"    if (readConsiderStorageType) {
+      Comparator<DatanodeInfoWithStorage> comp =
+          Comparator.comparing(DatanodeInfoWithStorage::getStorageType);
+      secondarySort = list -> Collections.sort(list, comp);
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.redundancy.considerLoad,"    if(considerLoad){
+      if(excludeNodeByLoad(node)){
+        return false;
+      }
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.redundancy.considerLoadByStorageType,"    if (considerLoadByStorageType) {
+      inServiceXceiverCount =
+          getInServiceXceiverAverageByStorageType(node.getStorageTypes());
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.redundancy.considerLoadByVolume,if (considerLoadByVolume) {,p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.retrycache.heap.percent,"      return new RetryCache(""NameNodeRetryCache"", heapPercent,
+          entryExpiryNanos);",p,/,/,/,/,/,/,no,/
+hdfs,dfs.namenode.support.allow.format,"    if (!conf.getBoolean(DFS_NAMENODE_SUPPORT_ALLOW_FORMAT_KEY, 
+        DFS_NAMENODE_SUPPORT_ALLOW_FORMAT_DEFAULT)) {
+      throw new IOException(""The option "" + DFS_NAMENODE_SUPPORT_ALLOW_FORMAT_KEY
+                + "" is set to false for this filesystem, so it ""
+                + ""cannot be formatted. You will need to set ""
+                + DFS_NAMENODE_SUPPORT_ALLOW_FORMAT_KEY +"" parameter ""
+                + ""to true in order to format this filesystem"");
+    }",p,/,/,/,/,/,/,no,/
+hdfs,dfs.permissions.superusergroup,String group = this.superGroup;,p,/,/,/,/,/,/,no,/
+hdfs,dfs.qjournal.new-epoch.timeout.ms,"    Map<AsyncLogger, NewEpochResponseProto> resps =
+        loggers.waitForWriteQuorum(loggers.newEpoch(nsInfo, myEpoch),
+            newEpochTimeoutMs, ""newEpoch("" + myEpoch + "")"");",p,/,/,/,/,/,/,no,/
+hdfs,dfs.qjournal.parallel-read.num-threads,"    int numThreads =
+        conf.getInt(DFSConfigKeys.DFS_QJOURNAL_PARALLEL_READ_NUM_THREADS_KEY,
+            DFSConfigKeys.DFS_QJOURNAL_PARALLEL_READ_NUM_THREADS_DEFAULT);
+    ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(numThreads,
+        numThreads, 60L, TimeUnit.SECONDS,
+        new LinkedBlockingQueue<>(),
+        new ThreadFactoryBuilder().setDaemon(true)
+            .setNameFormat(""Logger channel (from parallel executor) to "" + addr)
+            .setUncaughtExceptionHandler(UncaughtExceptionHandlers.systemExit())
+            .build());",p,/,/,/,/,/,/,no,/
+hive,datanucleus.connectionPool.maxPoolSize,"connPoolCompaction = setupJdbcConnectionPool(conf, maxPoolSize);",p,/,/,/,/,/,/,no,/
+hive,hive.binary.record.max.length,"int recordLength = in.read(bytes.get(), 0, maxRecordLength);",p,/,/,/,/,/,/,no,/
+hive,hive.cache.expr.evaluation,"      if (HiveConf.getBoolVar(hconf, HiveConf.ConfVars.HIVEEXPREVALUATIONCACHE)) {
+        conditionEvaluator = ExprNodeEvaluatorFactory.toCachedEval(conditionEvaluator);
+      }",p,/,/,/,/,/,/,no,/
+hive,hive.compactor.worker.timeout,"launchedJob = singleRun.get(timeout, TimeUnit.MILLISECONDS);",p,/,/,/,/,/,/,no,/
+hive,hive.druid.metadata.base,"    final String base = HiveConf.getVar(getConf(), HiveConf.ConfVars.DRUID_METADATA_BASE);
+    druidMetadataStorageTablesConfig = MetadataStorageTablesConfig.fromBase(base);",p,/,/,/,/,/,/,no,/
+hive,hive.exec.compress.output,"      if (isCompressed) {
+        jc_output = new JobConf(jc);
+        String codecStr = conf.getCompressCodec();
+        if (codecStr != null && !codecStr.trim().equals("""")) {
+          Class<? extends CompressionCodec> codec = 
+              JavaUtils.loadClass(codecStr);
+          FileOutputFormat.setOutputCompressorClass(jc_output, codec);
+        }
+        String type = conf.getCompressType();
+        if (type != null && !type.trim().equals("""")) {
+          CompressionType style = CompressionType.valueOf(type);
+          SequenceFileOutputFormat.setOutputCompressionType(jc, style);
+        }
+      }",p,/,/,/,/,/,/,no,/
+hive,hive.hook.proto.file.per.event,if (eventPerFile) {,p,/,/,/,/,/,/,no,/
+hive,hive.llap.allow.permanent.fns,"            if (!arePermanentFnsAllowed) {
+              LOG.info(""Not a built-in function: "" + cur.getExprString()
+                + "" (permanent functions are disabled)"");
+              return false;
+            }",p,/,/,/,/,/,/,no,/
+hive,hive.mapjoin.bucket.cache.size,"    this.loadExecService = Executors.newFixedThreadPool(numLoadThreads,
+        new ThreadFactoryBuilder()
+            .setDaemon(true)
+            .setPriority(Thread.NORM_PRIORITY)
+            .setNameFormat(""HT-Load-Thread-%d"")
+            .build());",p,/,/,/,/,/,/,no,/
+hive,hive.mapjoin.testing.no.hash.table.load,"    if (isTestingNoHashTableLoad) {
+      return;
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.metadata.move.exported.metadata.to.trash,"      if (moveMetadataToTrash == true) {
+        wh.deleteDir(metaPath, true, false, false);
+      }",p,/,/,/,/,/,/,no,/
+hive,hive.metastore.aggregate.stats.cache.max.writer.wait,"isLocked = candidateList.readLock.tryLock(maxReaderWaitTime, TimeUnit.MILLISECONDS);",p,/,/,/,/,/,/,no,/
+hive,hive.metastore.hbase.file.metadata.threads,"    this.threadPool = Executors.newFixedThreadPool(numThreads,
+        new ThreadFactoryBuilder().setNameFormat(""File-Metadata-%d"").setDaemon(true).build());",p,/,/,/,/,/,/,no,/
+hive,hive.metastore.server.min.threads,"ExecutorService executorService = new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads, 60L,
+        TimeUnit.SECONDS, new SynchronousQueue<>(), r -> {
+      Thread thread = new Thread(r);
+      thread.setDaemon(true);
+      thread.setName(""Metastore-HttpHandler-Pool: Thread-"" + thread.getId());
+      return thread;
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.metastore.thrift.framed.transport.enabled,"      if (useFramedTransport) {
+        throw new HiveMetaException(""Framed transport is not supported with SASL enabled."");
+      }",p,/,/,/,/,/,/,no,/
+hive,hive.metastore.try.direct.sql,"        if (MetastoreConf.getBoolVar(getConf(), ConfVars.TRY_DIRECT_SQL)) {
+          ret = updatePartitionColStatsInBatch(t, newStatsMap,
+                  request.getValidWriteIdList(), request.getWriteId());
+        }",p,/,/,/,/,/,/,no,/
+hive,hive.optimize.bucketingsorting,"    if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEOPTIMIZEBUCKETINGSORTING)) {
+      transformations.add(new BucketingSortingReduceSinkOptimizer());
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.optimize.ppd.storage,"      if (pushFilterToStorage) {
+        condn = pushFilterToStorageHandler(
+          (TableScanOperator) op,
+          (ExprNodeGenericFuncDesc)condn,
+          owi,
+          hiveConf);
+        if (condn == null) {
+          // we pushed the whole thing down
+          return null;
+        }
+      }",p,/,/,/,/,/,/,no,/
+hive,hive.orc.splits.include.file.footer,"      if (!context.footerInSplits) {
+        orcTail = null;
+      }",p,/,/,/,/,/,/,no,/
+hive,hive.privilege.synchronizer,"    if (!HiveConf.getBoolVar(hiveConf, ConfVars.HIVE_PRIVILEGE_SYNCHRONIZER)) {
+      return;
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.repl.dump.metadata.only.for.external.table,"  private boolean shouldWrite() {
+    return !dumpMetadataOnly && includeExternalTables;
+  }",p,/,/,/,/,/,/,no,/
+hive,hive.repl.parallel.copy.tasks,"  ExecutorService getExecutorService() {
+    return Executors.newFixedThreadPool(maxParallelCopyTask);
+  }",p,/,/,/,/,/,/,no,/
+hive,hive.repl.partitions.dump.parallelism,"ExecutorService consumer = Executors.newFixedThreadPool(nThreads, namingThreadFactory);",p,/,/,/,/,/,/,no,/
+hive,hive.script.recordwriter,"    try {
+      return (Class<? extends RecordWriter>) Class.forName(name, true,
+          Utilities.getSessionSpecifiedClassLoader());
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.security.metastore.authorization.auth.reads,"    if (!isReadAuthzEnabled()) {
+      return;
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.server2.authentication.ldap.baseDN,"    return execute(Collections.singletonList(baseDn), queries.customQuery(query))
+        .getAllLdapNamesAndAttributes();",p,/,/,/,/,/,/,no,/
+hive,hive.server2.wm.worker.threads,"    workPool = Executors.newFixedThreadPool(HiveConf.getIntVar(
+        conf, ConfVars.HIVE_SERVER2_WM_WORKER_THREADS), new ThreadFactoryBuilder().setDaemon(true)
+        .setNameFormat(""Workload management worker %d"").build());",p,/,/,/,/,/,/,no,/
+hive,hive.stats.join.ndv.readjustment,"        if (useCalciteForNdvReadjustment) {
+          Double approxNdv = RelMdUtil.numDistinctVals(oldDV * 1.0, newNumRows * 1.0);
+          Preconditions.checkNotNull(approxNdv, ""approximate NDV is null"");
+          newDV = approxNdv.longValue();
+        }",p,/,/,/,/,/,/,no,/
+hive,hive.strict.checks.orderby.no.limit,"    public static String checkNoLimit(Configuration conf) {
+      return isAllowed(conf, ConfVars.HIVE_STRICT_CHECKS_ORDERBY_NO_LIMIT) ? null : NO_LIMIT_MSG;
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.syslog.input.format.file.pruning,"    if (filePruning && filterExprSerialized != null) {
+      ExprNodeGenericFuncDesc filterExpr = SerializationUtilities.deserializeExpression(filterExprSerialized);
+      // we receive the expression filters from hive and convert it to sarg keeping only timestamp (ts) column from
+      // sys.logs table. The SARG on ts column is evaluated against the files that are formatted in YYYY-mm-dd-MM_* format
+      this.sarg = ConvertAstToSearchArg.create(job, filterExpr);
+    }",p,/,/,/,/,/,/,no,/
+hive,hive.txn.acid.metrics.max.cache.size,List<CompactionMetricsData> deltas = txnHandler.getTopCompactionMetricsDataPerType(maxCacheSize);,p,/,/,/,/,/,/,no,/
+hive,hive.txn.manager,"      HiveTxnManagerImpl impl = (HiveTxnManagerImpl)ReflectionUtils.newInstance(
+            conf.getClassByName(txnMgrName), conf);",p,/,/,/,/,/,/,no,/
+hive,HIVESMBJOINCACHEROWS,"RowContainer<List<Object>> rc = new RowContainer<List<Object>>(containerSize, hconf, reporter);",p,/,/,/,/,/,/,no,/
+hive,REPL_SOURCE_CLUSTER_NAME,"  private void addClassificationTransform(List<AttributeTransform> transforms, String classificationName) {
+    transforms.add(create(""__entity"", ""topLevel: "",
+            ""__entity"", ""ADD_CLASSIFICATION: "" + classificationName));
+  }",p,/,/,/,/,/,/,no,/
+hive,SERVER_MAX_MESSAGE_SIZE,"inputProtoFactory = new TCompactProtocol.Factory(maxMessageSize, maxMessageSize);",p,/,/,/,/,/,/,no,/
+hive,SERVER_MAX_THREADS,"    ExecutorService executorService = new ThreadPoolExecutor(minWorkerThreads, maxWorkerThreads, 60L,
+        TimeUnit.SECONDS, new SynchronousQueue<>(), r -> {
+      Thread thread = new Thread(r);
+      thread.setDaemon(true);
+      thread.setName(""Metastore-HttpHandler-Pool: Thread-"" + thread.getId());
+      return thread;
+    })",p,/,/,/,/,/,/,no,/
+hive,USE_THRIFT_COMPACT_PROTOCOL,"          if (useCompactProtocol) {
+            protocol = new TCompactProtocol(transport);
+          } else {
+            protocol = new TBinaryProtocol(transport);
+          }",p,/,/,/,/,/,/,no,/
+httpd,BrotliQuality,"        ctx = create_ctx(conf->quality, conf->lgwin, conf->lgblock,
+                         f->c->bucket_alloc, r->pool);",p,/,/,/,/,/,/,yes,/
+httpd,cache_root_len,"dobj->root = apr_pstrmemdup(r->pool, conf->cache_root, conf->cache_root_len);",p,/,/,/,/,/,/,yes,/
+httpd,CheckSpelling,"        else if ((cfg->check_case_only == 0)
+                 && ((q = spdist(bad, dirent.name)) != SP_VERYDIFFERENT)) {
+            misspelled_file *sp_new;
+
+            sp_new = (misspelled_file *) apr_array_push(candidates);
+            sp_new->name = apr_pstrdup(r->pool, dirent.name);
+            sp_new->quality = q;
+        }",p,/,/,/,/,/,/,yes,/
+httpd,CookieHTTPOnly,"        if (apreq_cookie_is_httponly(c))
+            strcpy(f, ""; HttpOnly"");",p,/,/,/,/,/,/,yes,/
+httpd,CookieSecure,"    if (dcfg->is_secure) {
+        new_cookie = apr_pstrcat(r->pool, new_cookie, ""; Secure"",
+                                 NULL);
+    }",p,/,/,/,/,/,/,yes,/
+httpd,DBDExptime,"apr_time_from_sec(cfg->exptime),
+                            dbd_construct, dbd_destruct, group,
+                            group->pool);",p,/,/,/,/,/,/,yes,/
+httpd,DBDMin,"    rv = apr_reslist_create(&group->reslist,
+                            cfg->nmin, cfg->nkeep, cfg->nmax,
+                            apr_time_from_sec(cfg->exptime),
+                            dbd_construct, dbd_destruct, group,
+                            group->pool);",p,/,/,/,/,/,/,yes,/
+httpd,deflatewindowsize,"            zRC = deflateInit2(&ctx->stream, c->compressionlevel, Z_DEFLATED,
+                               c->windowSize, c->memlevel,
+                               Z_DEFAULT_STRATEGY);",p,/,/,/,/,/,/,yes,/
+httpd,enable_output,"    if (ptr->enable_output)
+        ap_add_output_filter(""DUMPIO_OUT"", ptr, NULL, c);",p,/,/,/,/,/,/,yes,/
+httpd,extension_mappings,"        exinfo = (extension_info*)apr_hash_get(m->extension_mappings, key,
+                                               APR_HASH_KEY_STRING);",p,/,/,/,/,/,/,yes,/
+httpd,fout_buf_plain_size,"fctx->fout_buf_plain = apr_pcalloc(c->pool, fctx->fout_buf_plain_size);",p,/,/,/,/,/,/,yes,/
+httpd,honor_client_order,"    rr = rustls_server_config_builder_set_ignore_client_order(
+        builder, sc->honor_client_order == TLS_FLAG_FALSE);",p,/,/,/,/,/,/,yes,/
+httpd,ignore_headers_set,"        if ((conf->ignore_headers_set == CACHE_IGNORE_HEADERS_UNSET) ||
+            (conf->ignore_headers->nelts)) {
+            /* Only add header if no ""None"" has been found in header list
+             * so far.
+             * (When 'None' is passed, IGNORE_HEADERS_SET && nelts == 0.)
+             */
+            new = (char **)apr_array_push(conf->ignore_headers);
+            (*new) = (char *)header;
+        }",p,/,/,/,/,/,/,yes,/
+httpd,KeepAlive,"    if (ccfg->in_keep_alive) {
+        /* For this read[_request line()], wait for the first byte using the
+         * normal keep-alive timeout (hence don't take this expected idle time
+         * into account to setup the connection expiry below).
+         */
+        ccfg->in_keep_alive = 0;
+        rv = ap_get_brigade(f->next, bb, AP_MODE_SPECULATIVE, block, 1);
+        if (rv != APR_SUCCESS || APR_BRIGADE_EMPTY(bb)) {
+            return rv;
+        }
+        apr_brigade_cleanup(bb);
+    }",p,/,/,/,/,/,/,yes,/
+httpd,lasterror,"        return apr_psprintf(cmd->temp_pool,
+                            ""Failed to compile sed expression. %s"",
+                            sed_cfg->last_error);",p,/,/,/,/,/,/,yes,/
+httpd,lock_wait_timeout,"return store->lock_global(store, p, max_wait);",p,/,/,/,/,/,/,yes,/
+httpd,LuaCodeCache,"        if (spec->codecache == AP_LUA_CACHE_STAT) {
+            apr_finfo_t lua_finfo;
+            apr_stat(&lua_finfo, spec->file, APR_FINFO_MTIME|APR_FINFO_SIZE, lifecycle_pool);
+
+            /* On first visit, modified will be zero, but that's fine - The file is 
+            loaded in the vm_construct function.
+            */
+            if ((cache_info->modified == lua_finfo.mtime && cache_info->size == lua_finfo.size)
+                    || cache_info->modified == 0) {
+                tryCache = 1;
+            }
+            cache_info->modified = lua_finfo.mtime;
+            cache_info->size = lua_finfo.size;
+        }",p,/,/,/,/,/,/,yes,/
+httpd,max_balancers,"            rv = storage->create(&new, conf->id,
+                                 ALIGNED_PROXY_BALANCER_SHARED_SIZE,
+                                 conf->max_balancers, type, pconf);",p,/,/,/,/,/,/,yes,/
+httpd,MDRenewMode,"    if (md->renew_mode == MD_RENEW_MANUAL) {
+        return 0;
+    }",p,/,/,/,/,/,/,yes,/
+httpd,merge_trailers,"                    if (conf->merge_trailers == AP_MERGE_TRAILERS_ENABLE) {
+                        r->headers_in = apr_table_overlay(r->pool, r->headers_in, r->trailers_in);
+                    }",p,/,/,/,/,/,/,yes,/
+httpd,multimatch,"                if (conf->multimatch & MULTIMATCH_HANDLERS) {
+                    found = 1;
+                }",p,/,/,/,/,/,/,yes,/
+httpd,p_is_fnmatch,"            entry_proxy->p_is_fnmatch ? apr_fnmatch(entry_proxy->p,
+                    proxyname, 0) :
+                    strncmp(proxyname, entry_proxy->p,
+                            strlen(entry_proxy->p))) {
+            continue;",p,/,/,/,/,/,/,yes,/
+httpd,Proxy_protocol_disabled,"    if (!remoteip_addr_in_list(conf->proxy_protocol_enabled, c->local_addr)
+        || remoteip_addr_in_list(conf->proxy_protocol_disabled, c->local_addr)) {
+
+        return DECLINED;
+    }",p,/,/,/,/,/,/,yes,/
+httpd,ProxyErrorOverride,"    if (!conf->error_override) 
+        return 0;",p,/,/,/,/,/,/,yes,/
+httpd,ProxyHTMLStripComments,"    if (ctx->cfg->strip_comments)
+        return;",p,/,/,/,/,/,/,yes,/
+httpd,ProxyPassInterpolateEnv,"            if (conf->interpolate_env == 1) {
+                ent = (struct proxy_alias *)rconf->cookie_paths->elts;
+            }",p,/,/,/,/,/,/,yes,/
+httpd,quick,"    if (conf->quick) {
+        return 1;
+    }",p,/,/,/,/,/,/,yes,/
+httpd,read_buf_size,"        rv = ap_get_brigade(c_i->input_filters, bb_i, AP_MODE_READBYTES,
+                            APR_NONBLOCK_READ, bsize);",p,/,/,/,/,/,/,yes,/
+httpd,redirect_index,"            if (ap_is_HTTP_REDIRECT(d->redirect_index)) {
+                apr_table_setn(r->headers_out, ""Location"", ap_construct_url(r->pool, rr->uri, r));
+                return d->redirect_index;
+            }",p,/,/,/,/,/,/,yes,/
+httpd,redirect_status,if (ap_is_HTTP_REDIRECT(status)) {,p,/,/,/,/,/,/,yes,/
+httpd,service_unavailable,    if (sslconn->service_unavailable) {,p,/,/,/,/,/,/,yes,/
+httpd,shm_size,"memset(shm_rec, 0, shm_size);",p,/,/,/,/,/,/,yes,/
+httpd,SSLSessionCache,"SSL_CTX_set_session_cache_mode(ctx, mc->sesscache_mode);",p,/,/,/,/,/,/,yes,/
+httpd,Suexec,return cfg->active ? &cfg->ugid : NULL;,p,/,/,/,/,/,/,yes,/
+httpd,TLSSessionCache,"static const char *var_get_session_resumed(const tls_var_lookup_ctx_t *ctx)
+{
+    return ctx->cc->session_id_cache_hit? ""Resumed"" : ""Initial"";
+}",p,/,/,/,/,/,/,yes,/
+httpd,use_store_locks,"    if (reg->use_store_locks) {
+        rv = md_store_lock_global(reg->store, p, reg->lock_wait_timeout);
+        if (APR_SUCCESS != rv) {
+            md_log_perror(MD_LOG_MARK, MD_LOG_DEBUG, rv, p,
+                          ""unable to acquire global store lock"");
+        }
+    }",p,/,/,/,/,/,/,yes,/
+httpd,vm_max,"apr_reslist_create(&reslist, spec->vm_min, spec->vm_max, spec->vm_max, 0, 
+                                (apr_reslist_constructor) server_vm_construct, 
+                                (apr_reslist_destructor) server_cleanup_lua, 
+                                server_spec, r->server->process->pool)",p,/,/,/,/,/,/,yes,/
+mapreduce,mapreduce.ifile.readahead.bytes,"      curReadahead = raPool.readaheadStream(
+          ""ifile"", inFd,
+          currentOffset, readaheadLength, dataLength,
+          curReadahead);",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.input.fileinputformat.list-status.num-threads,"    int numThreads = conf.getInt(FileInputFormat.LIST_STATUS_NUM_THREADS,
+        FileInputFormat.DEFAULT_LIST_STATUS_NUM_THREADS);
+    LOG.debug(""Instantiated LocatedFileStatusFetcher with {} threads"",
+        numThreads);
+    rawExec = HadoopExecutors.newFixedThreadPool(
+        numThreads,
+        new ThreadFactoryBuilder().setDaemon(true)
+            .setNameFormat(""GetFileInfo #%d"").build());
+    exec = MoreExecutors.listeningDecorator(rawExec);",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.job.dfs.storage.capacity.kill-limit-exceed,"      if (killJobWhenExceedClusterStorageCapacity) {
+        LOG.error(
+            ""Fast fail the job because the cluster storage capacity was exceeded."");
+        fastFailJob = true;
+      }",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.job.encrypted-intermediate-data.buffer.kb,"int bufferSize = getBufferSize(conf);
+      return new CryptoInputStream(in, cryptoCodec, bufferSize,
+          getEncryptionKey(), iv, offset + cryptoPadding(conf));",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.job.encrypted-intermediate-data-key-size-bits,"          int keyLen = conf.getInt(
+              MRJobConfig.MR_ENCRYPTED_INTERMEDIATE_DATA_KEY_SIZE_BITS,
+              MRJobConfig
+                  .DEFAULT_MR_ENCRYPTED_INTERMEDIATE_DATA_KEY_SIZE_BITS);
+          KeyGenerator keyGen =
+              KeyGenerator.getInstance(INTERMEDIATE_DATA_ENCRYPTION_ALGO);
+          keyGen.init(keyLen);",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.job.local-fs.single-disk-limit.check.interval-ms,Thread.sleep(checkInterval);,p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.map.speculative,"            if(task.speculationEnabled) {
+              // if not all of the inProgressAttempts are hanging for resource
+              for (TaskAttemptId attemptId : task.inProgressAttempts) {
+                if (((TaskAttemptImpl) task.getAttempt(attemptId))
+                    .isContainerAssigned()) {
+                  shouldAddNewAttempt = false;
+                  break;
+                }
+              }
+            }",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.reduce.skip.proc-count.auto-incr,"        if(incrProcCount) {
+          reporter.incrCounter(SkipBadRecords.COUNTER_GROUP, 
+              SkipBadRecords.COUNTER_REDUCE_PROCESSED_GROUPS, 1);
+        }",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.shuffle.ssl.file.buffer.size,"      final FadvisedChunkedFile chunk = new FadvisedChunkedFile(spill,
+          info.startOffset, info.partLength, handlerCtx.sslFileBufferSize,
+          handlerCtx.manageOsCache, handlerCtx.readaheadLength, handlerCtx.readaheadPool,
+          spillFile.getAbsolutePath());",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.shuffle.transferTo.allowed,"        if(this.shuffleTransferToAllowed) {
+          return super.transferTo(target, position);
+        }",p,/,/,/,/,/,/,no,/
+mapreduce,mapreduce.task.ping-for-liveliness-check.enabled,"      if (getConfig().getBoolean(MRJobConfig.MR_TASK_ENABLE_PING_FOR_LIVELINESS_CHECK,
+          MRJobConfig.DEFAULT_MR_TASK_ENABLE_PING_FOR_LIVELINESS_CHECK)) {
+        taskHeartbeatHandler.progressing(yarnAttemptID);
+      }",p,/,/,/,/,/,/,no,/
+mapreduce,yarn.app.mapreduce.am.job.task.listener.thread-count,"    taskHeartbeatHandler = new TaskHeartbeatHandler(context.getEventHandler(), 
+        context.getClock(), conf.getInt(MRJobConfig.MR_AM_TASK_LISTENER_THREAD_COUNT, 
+            MRJobConfig.DEFAULT_MR_AM_TASK_LISTENER_THREAD_COUNT));",p,/,/,/,/,/,/,no,/
+mysql,binlog_direct_non_transactional_updates,(binlog_direct ? BINLOG_DIRECT_ON : BINLOG_DIRECT_OFF),p,/,/,/,/,/,/,yes,/
+mysql,binlog_error_action,"  if (binlog_error_action == ABORT_SERVER) {
+    exec_binlog_error_action_abort(
+        ""Either disk is full, file system is read only or ""
+        ""there was an encryption error while opening the binlog. ""
+        ""Aborting the server."");
+  }",p,/,/,/,/,/,/,yes,/
+mysql,binlog_expire_logs_auto_purge,  if (!opt_binlog_expire_logs_auto_purge) return true;,p,/,/,/,/,/,/,yes,/
+mysql,clone_autotune_concurrency,"      if (!clone_autotune_concurrency) {
+        /* Limit number of workers based on other configurations. */
+        auto to_spawn = limit_workers(num_workers);
+        using namespace std::placeholders;
+        auto func = std::bind(clone_client, _1, _2);
+        spawn_workers(to_spawn, func);
+      }",p,/,/,/,/,/,/,yes,/
+mysql,create_admin_listener_thread,"  if (m_use_separate_thread_for_admin) {
+    if (spawn_admin_thread(m_admin_interface_listen_socket,
+                           m_admin_bind_address.network_namespace))
+      return true;
+  }",p,/,/,/,/,/,/,no,/
+mysql,innodb_compress_debug,"    switch (srv_debug_compress) {
+      case Compression::LZ4:
+      case Compression::ZLIB:
+      case Compression::NONE:
+
+        compression.m_type = static_cast<Compression::Type>(srv_debug_compress);
+        break;
+
+      default:
+        compression.m_type = Compression::NONE;
+    }",p,/,/,/,/,/,/,yes,/
+mysql,innodb_disable_sort_file_cache,"    if (srv_disable_sort_file_cache) {
+      os_file_set_nocache(file->m_file.get(), ""ddl0ddl.cc"", ""sort"");
+    }",p,/,/,/,/,/,/,yes,/
+mysql,innodb_log_writer_threads,"  if (srv_log_writer_threads) {
+    log_resume_writer_threads(log);
+  } else {
+    log_pause_writer_threads(log);
+  }",p,/,/,/,/,/,/,yes,/
+mysql,innodb_read_io_threads,"if (!os_aio_init(srv_n_read_io_threads, srv_n_write_io_threads)) {",p,/,/,/,/,/,/,no,/
+mysql,mysqlx_connect_timeout,"  const auto real_connect_timeout =
+      std::min<uint32_t>(connect_timeout, m_read_timeout);",p,/,/,/,/,/,/,yes,/
+mysql,ndb_batch_size,"    m_batch_size =
+        opt_ndb_replica_batch_size == DEFAULT_REPLICA_BATCH_SIZE
+            ? std::max(opt_ndb_replica_batch_size, THDVAR(nullptr, batch_size))
+            : opt_ndb_replica_batch_size;",p,/,/,/,/,/,/,yes,/
+mysql,ndb_schema_dist_upgrade_allowed,"      if (!upgrade_allowed) {
+        ndb_log_info(""Upgrade of '%s' table not allowed!"", m_name.c_str());
+        // Skip upgrading the table and continue with
+        // limited functionality
+        return true;
+      }",p,/,/,/,/,/,/,no,/
+mysql,optimizer_search_depth,"uint Optimize_table_order::determine_search_depth(uint search_depth,
+                                                  uint table_count) {
+  if (search_depth > 0) return search_depth;
+  /* TODO: this value should be determined dynamically, based on statistics: */
+  const uint max_tables_for_exhaustive_opt = 7;
+
+  if (table_count <= max_tables_for_exhaustive_opt)
+    search_depth =
+        table_count + 1;  // use exhaustive for small number of tables
+  else
+    /*
+      TODO: this value could be determined by some mapping of the form:
+      depth : table_count -> [max_tables_for_exhaustive_opt..MAX_EXHAUSTIVE]
+    */
+    search_depth = max_tables_for_exhaustive_opt;  // use greedy search
+
+  return search_depth;
+}",p,/,/,/,/,/,/,yes,/
+mysql,rpl_read_size,"    if (istream.open(key_file_binlog, key_file_binlog_cache, binlog_name,
+                     MYF(MY_WME | MY_DONT_CHECK_FILESIZE), rpl_read_size))
+      return nullptr;",p,/,/,/,/,/,/,yes,/
+mysql,select_into_disk_sync,"  if (thd->variables.select_into_disk_sync) {
+    cache->disk_sync = true;
+    if (thd->variables.select_into_disk_sync_delay)
+      cache->disk_sync_delay = thd->variables.select_into_disk_sync_delay;
+  }",p,/,/,/,/,/,/,yes,/
+mysql,temptable_use_mmap,"      if (temptable_use_mmap) {
+        return temptable_max_mmap;
+      } else {
+        return 0;
+      }",p,/,/,/,/,/,/,yes,/
+nginx,aio_write,if (clcf->aio == NGX_HTTP_AIO_THREADS && clcf->aio_write) {,p,/,/,/,/,/,/,yes,/
+nginx,autoindex_exact_size,"        if (alcf->exact_size) {
+            if (entry[i].dir) {
+                b->last = ngx_cpymem(b->last,  ""                  -"",
+                                     sizeof(""                  -"") - 1);
+            } else {
+                b->last = ngx_sprintf(b->last, ""%19O"", entry[i].size);
+            }
+
+        }",p,/,/,/,/,/,/,yes,/
+nginx,client_body_in_single_buffer,"        if (r->request_body_in_single_buf) {
+            size += preread;
+        }",p,/,/,/,/,/,/,yes,/
+nginx,client_body_timeout,"ngx_add_timer(c->read, clcf->client_body_timeout);",p,/,/,/,/,/,/,yes,/
+nginx,connection_pool_size,"c->pool = ngx_create_pool(ls->pool_size, ev->log);",p,/,/,/,/,/,/,yes,/
+nginx,create_full_put_path,"        if (!ext->create_path) {
+            goto failed;
+        }",p,/,/,/,/,/,/,yes,/
+nginx,fastcgi_buffer_size,if (conf->upstream.busy_buffers_size < size) {,p,/,/,/,/,/,/,yes,/
+nginx,fastcgi_busy_buffers_size,"    if (conf->upstream.busy_buffers_size
+        > (conf->upstream.bufs.num - 1) * conf->upstream.bufs.size)
+    {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+            ""\""scgi_busy_buffers_size\"" must be less than ""
+            ""the size of all \""scgi_buffers\"" minus one buffer"");
+
+        return NGX_CONF_ERROR;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,fastcgi_intercept_errors,"    if (!u->conf->intercept_errors) {
+        return NGX_DECLINED;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,grpc_intercept_errors,"    if (!u->conf->intercept_errors) {
+        return NGX_DECLINED;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,grpc_socket_keepalive,"    if (pscf->socket_keepalive) {
+        u->peer.so_keepalive = 1;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,grpc_ssl_verify_depth,"SSL_CTX_set_verify_depth(ssl->ctx, depth);",p,/,/,/,/,/,/,yes,/
+nginx,gunzip_buffers,"    } else if (ctx->bufs < conf->bufs.num) {
+
+        ctx->out_buf = ngx_create_temp_buf(r->pool, conf->bufs.size);
+        if (ctx->out_buf == NULL) {
+            return NGX_ERROR;
+        }
+
+        ctx->out_buf->tag = (ngx_buf_tag_t) &ngx_http_gunzip_filter_module;
+        ctx->out_buf->recycled = 1;
+        ctx->bufs++;
+
+    }",p,/,/,/,/,/,/,yes,/
+nginx,gzip_buffers,"        ctx->out_buf = ngx_create_temp_buf(r->pool, conf->bufs.size);
+        if (ctx->out_buf == NULL) {
+            return NGX_ERROR;
+        }",p,/,/,/,/,/,/,yes,/
+nginx,http2,"        if (h2scf->enable || hc->addr_conf->http2) {
+
+            SSL_get0_alpn_selected(c->ssl->connection, &data, &len);
+
+            if (len == 2 && data[0] == 'h' && data[1] == '2') {
+                ngx_http_v2_init(c->read);
+                return;
+            }
+        }",p,/,/,/,/,/,/,yes,/
+nginx,http2_recv_buffer_size,"        h2mcf->recv_buffer = ngx_palloc(ngx_cycle->pool,
+                                        h2mcf->recv_buffer_size);",p,/,/,/,/,/,/,yes,/
+nginx,imap_client_buffer,"s->buffer = ngx_create_temp_buf(c->pool, iscf->client_buffer_size);",p,/,/,/,/,/,/,yes,/
+nginx,limit_conn_dry_run,"        if (lrcf->dry_run) {
+            r->main->limit_req_status = NGX_HTTP_LIMIT_REQ_REJECTED_DRY_RUN;
+            return NGX_DECLINED;
+        }",p,/,/,/,/,/,/,yes,/
+nginx,limit_conn_log_level,"                ngx_log_error(lccf->log_level, r->connection->log, 0,
+                              ""limiting connections%s by zone \""%V\"""",
+                              lccf->dry_run ? "", dry run,"" : """",
+                              &limits[i].shm_zone->shm.name);",p,/,/,/,/,/,/,yes,/
+nginx,log_not_found,"    if (clcf->log_not_found) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, err,
+                      ""\""%s\"" is not found"", file);
+    }",p,/,/,/,/,/,/,yes,/
+nginx,master_process,"    if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
+        ngx_use_accept_mutex = 1;
+        ngx_accept_mutex_held = 0;
+        ngx_accept_mutex_delay = ecf->accept_mutex_delay;
+
+    }",p,/,/,/,/,/,/,yes,/
+nginx,preread_buffer_size,"            c->buffer = ngx_create_temp_buf(c->pool, cscf->preread_buffer_size);
+            if (c->buffer == NULL) {
+                rc = NGX_ERROR;
+                break;
+            }",p,/,/,/,/,/,/,yes,/
+nginx,proxy_intercept_errors,"    if (!u->conf->intercept_errors) {
+        return NGX_DECLINED;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,proxy_set_header,"        for (i = 0; i < conf->headers_source->nelts; i++) {
+
+            if (src[i].key.len == 4
+                && ngx_strncasecmp(src[i].key.data, (u_char *) ""Host"", 4) == 0)
+            {
+                conf->host_set = 1;
+            }
+
+            s = ngx_array_push(&headers_merged);
+            if (s == NULL) {
+                return NGX_ERROR;
+            }
+
+            *s = src[i];
+        }",p,/,/,/,/,/,/,yes,/
+nginx,proxy_ssl_session_reuse,"    if (!enable) {
+        return NGX_OK;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,quic_bpf,"    if (!bcf->enabled) {
+        return NULL;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,quic_gso,"    if (!qc->conf->gso_enabled) {
+        return 0;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,request_pool_size,"pool = ngx_create_pool(cscf->request_pool_size, c->log);",p,/,/,/,/,/,/,yes,/
+nginx,request_pool_size,"    pool = ngx_create_pool(cscf->request_pool_size, c->log);
+    if (pool == NULL) {
+        return NULL;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,reset_timedout_connection,"        if (clcf->reset_timedout_connection) {
+            linger.l_onoff = 1;
+            linger.l_linger = 0;
+
+            if (setsockopt(r->connection->fd, SOL_SOCKET, SO_LINGER,
+                           (const void *) &linger, sizeof(struct linger)) == -1)
+            {
+                ngx_log_error(NGX_LOG_ALERT, log, ngx_socket_errno,
+                              ""setsockopt(SO_LINGER) failed"");
+            }
+        }",p,/,/,/,/,/,/,yes,/
+nginx,scgi_force_ranges,"    if (r->upstream->conf->force_ranges) {
+        return NGX_OK;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,scgi_intercept_errors,"    if (!u->conf->intercept_errors) {
+        return NGX_DECLINED;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,ssl_reject_handshake,"                if (sscf->certificates || sscf->reject_handshake) {
+                    continue;
+                }",p,/,/,/,/,/,/,yes,/
+nginx,ssl_stapling_responder,"        if (ngx_ssl_stapling(cf, &conf->ssl, &conf->stapling_file,
+                             &conf->stapling_responder, conf->stapling_verify)
+            != NGX_OK)
+        {
+            return NGX_CONF_ERROR;
+        }",p,/,/,/,/,/,/,yes,/
+nginx,uwsgi_cache_valid,"        if (valid == 0) {
+            valid = ngx_http_file_cache_valid(u->conf->cache_valid,
+                                              u->headers_in.status_n);
+            if (valid) {
+                r->cache->valid_sec = now + valid;
+            }
+        }",p,/,/,/,/,/,/,yes,/
+nginx,uwsgi_socket_keepalive,"    if (pscf->socket_keepalive) {
+        u->peer.so_keepalive = 1;
+    }",p,/,/,/,/,/,/,yes,/
+nginx,uwsgi_ssl_session_reuse,if (u->conf->ssl_session_reuse) {,p,/,/,/,/,/,/,yes,/
+postgresql,data_sync_retry,"data_sync_elevel(int elevel)
+{
+	return data_sync_retry ? elevel : PANIC;
+}",p,/,/,/,/,/,/,yes,/
+postgresql,default_tablespace,"result = get_tablespace_oid(default_tablespace, true);",p,/,/,/,/,/,/,yes,/
+postgresql,default_toast_compression,switch (cmethod),p,/,/,/,/,/,/,yes,/
+postgresql,enable_indexonlyscan,"	if (!enable_indexonlyscan)
+		return false;",p,/,/,/,/,/,/,yes,/
+postgresql,enable_memoize,"	if (!enable_memoize)
+		return NULL;",p,/,/,/,/,/,/,yes,/
+postgresql,enable_partitionwise_join,"	if (!enable_partitionwise_join)
+	{
+		Assert(!IS_PARTITIONED_REL(joinrel));
+		return;
+	}",p,/,/,/,/,/,/,yes,/
+postgresql,enable_seqscan,"	if (!enable_seqscan)
+		startup_cost += disable_cost;",p,/,/,/,/,/,/,yes,/
+postgresql,enable_sort,"	if (!enable_sort)
+		startup_cost += disable_cost;",p,/,/,/,/,/,/,yes,/
+postgresql,fullPageWrites,"	if (!fullPageWrites)
+	{
+		WALInsertLockAcquireExclusive();
+		Insert->fullPageWrites = false;
+		WALInsertLockRelease();
+	}",p,/,/,/,/,/,/,yes,/
+postgresql,jit_profiling_support,"			if (jit_profiling_support)
+				LLVMOrcUnregisterPerf(llvm_opt3_orc);",p,/,/,/,/,/,/,yes,/
+postgresql,num_temp_buffers,"LocalBufferDescriptors = (BufferDesc *) calloc(nbufs, sizeof(BufferDesc));",p,/,/,/,/,/,/,yes,/
+postgresql,pgstat_track_counts,"	if (!pgstat_track_counts)
+		return;",p,/,/,/,/,/,/,yes,/
+postgresql,syslog_sequence_numbers,"			if (syslog_sequence_numbers)
+				syslog(level, ""[%lu-%d] %s"", seq, chunk_nr, buf);
+			else
+				syslog(level, ""[%d] %s"", chunk_nr, buf);",p,/,/,/,/,/,/,yes,/
+postgresql,track_commit_timestamp,"	if (!track_commit_timestamp)
+		DeactivateCommitTs();
+	else
+		ActivateCommitTs();",p,/,/,/,/,/,/,yes,/
+postgresql,track_wal_io_timing,"				if (track_wal_io_timing)
+				{
+					instr_time	end;
+
+					INSTR_TIME_SET_CURRENT(end);
+					INSTR_TIME_ACCUM_DIFF(PendingWalStats.wal_write_time, end, start);
+				}",p,/,/,/,/,/,/,yes,/
+yarn,APPS_CACHE_SIZE,"appsLRUCache = new LRUCache<>(cacheSize, appsCacheTimeMs);",p,/,/,/,/,/,/,no,/
+yarn,FEDERATION_STATESTORE_SQL_MAXCONNECTIONS,    dataSource.setMaximumPoolSize(maximumPoolSize);,p,/,/,/,/,/,/,no,/
+yarn,GPG_POLICY_GENERATOR_READONLY,"        if (readOnly) {
+          LOG.info(""[read-only] Skipping policy update for queue {}"", queue);
+          return;
+        }",p,/,/,/,/,/,/,no,/
+yarn,GPG_SCHEDULED_EXECUTOR_THREADS,"    this.scheduledExecutorService = new ScheduledThreadPoolExecutor(
+        conf.getInt(YarnConfiguration.GPG_SCHEDULED_EXECUTOR_THREADS,
+            YarnConfiguration.DEFAULT_GPG_SCHEDULED_EXECUTOR_THREADS));",p,/,/,/,/,/,/,no,/
+yarn,LOAD_BASED_SC_SELECTOR_USE_ACTIVE_CORE,if (useActiveCoreEnabled) {,p,/,/,/,/,/,/,no,/
+yarn,NM_LOCALIZER_FETCH_THREAD_COUNT,"return HadoopExecutors.newFixedThreadPool(nThreads, tf);",p,/,/,/,/,/,/,no,/
+yarn,NM_LOG_DELETION_THREADS_COUNT,"    sched =
+        new HadoopScheduledThreadPoolExecutor(conf.getInt(
+            YarnConfiguration.NM_LOG_DELETION_THREADS_COUNT,
+            YarnConfiguration.DEFAULT_NM_LOG_DELETE_THREAD_COUNT), tf);",p,/,/,/,/,/,/,no,/
+yarn,NM_LOG_RETAIN_SECONDS,"        LogDeleterProto deleterProto = LogDeleterProto.newBuilder()
+            .setUser(user)
+            .setDeletionTime(deletionTimestamp)
+            .build();",p,/,/,/,/,/,/,no,/
+yarn,NM_NUMA_AWARENESS_ENABLED,"    if(numaAwarenessEnabled(getConf())) {
+      numaResourceAllocator = new NumaResourceAllocator(nmContext);
+      numactl = this.getConf().get(YarnConfiguration.NM_NUMA_AWARENESS_NUMACTL_CMD,
+              YarnConfiguration.DEFAULT_NM_NUMA_AWARENESS_NUMACTL_CMD);
+      try {
+        numaResourceAllocator.init(this.getConf());
+        LOG.info(""NUMA resources allocation is enabled in DefaultContainer Executor,"" +
+                "" Successfully initialized NUMA resources allocator."");
+      } catch (YarnException e) {
+        LOG.warn(""Improper NUMA configuration provided."", e);
+        throw new IOException(""Failed to initialize configured numa subsystem!"");
+      }
+    }",p,/,/,/,/,/,/,no,/
+yarn,NM_PMEM_MB,"    Resource resourcesForContainers = Resource.newInstance(
+        configuredPMemForContainers, configuredVCoresForContainers);",p,/,/,/,/,/,/,no,/
+yarn,OPPORTUNISTIC_CONTAINER_ALLOCATION_ENABLED,"      if (YarnConfiguration.isDistSchedulingEnabled(config) &&
+          !YarnConfiguration
+              .isOpportunisticContainerAllocationEnabled(config)) {
+        throw new YarnRuntimeException(
+            ""Invalid parameters: opportunistic container allocation has to "" +
+                ""be enabled when distributed scheduling is enabled."");
+      }",p,/,/,/,/,/,/,no,/
+yarn,RM_ACTIVITIES_MANAGER_CLEANUP_INTERVAL_MS,"          try {
+            Thread.sleep(activitiesCleanupIntervalMs);
+          }",p,/,/,/,/,/,/,no,/
+yarn,RM_AMLAUNCHER_THREAD_COUNT,"    launcherPool = new ThreadPoolExecutor(threadCount, threadCount, 1,
+        TimeUnit.HOURS, new LinkedBlockingQueue<Runnable>());",p,/,/,/,/,/,/,no,/
+yarn,RM_CLIENT_THREAD_COUNT,"    this.server =   
+      rpc.getServer(ApplicationClientProtocol.class, this,
+            clientBindAddress,
+            conf, this.rmDTSecretManager,
+            conf.getInt(YarnConfiguration.RM_CLIENT_THREAD_COUNT, 
+                YarnConfiguration.DEFAULT_RM_CLIENT_THREAD_COUNT));",p,/,/,/,/,/,/,no,/
+yarn,RM_HISTORY_WRITER_MULTI_THREADED_DISPATCHER_POOL_SIZE,"      for (int i = 0; i < num; ++i) {
+        AsyncDispatcher dispatcher = createDispatcher();
+        dispatchers.add(dispatcher);
+        addIfService(dispatcher);
+      }",p,/,/,/,/,/,/,no,/
+yarn,RM_PLACEMENT_CONSTRAINTS_ALGORITHM_POOL_SIZE,this.algorithmThreadPool = Executors.newFixedThreadPool(poolSize);,p,/,/,/,/,/,/,no,/
+yarn,RM_RESOURCE_TRACKER_CLIENT_THREAD_COUNT,"    this.server = rpc.getServer(
+        ResourceTracker.class, this, resourceTrackerAddress, conf, null,
+        conf.getInt(YarnConfiguration.RM_RESOURCE_TRACKER_CLIENT_THREAD_COUNT,
+            YarnConfiguration.DEFAULT_RM_RESOURCE_TRACKER_CLIENT_THREAD_COUNT));",p,/,/,/,/,/,/,no,/
+yarn,RM_SCHEDULER_CLIENT_THREAD_COUNT,"      Server server = rpc.getServer(DistributedSchedulingAMProtocol.class, this,
+          addr, serverConf, secretManager,
+          serverConf.getInt(YarnConfiguration.RM_SCHEDULER_CLIENT_THREAD_COUNT,
+              YarnConfiguration.DEFAULT_RM_SCHEDULER_CLIENT_THREAD_COUNT));",p,/,/,/,/,/,/,no,/
+yarn,RM_SCHEDULER_ENABLE_MONITORS,"    if (!monitorsEnabled) {
+      if (!runningSchedulingMonitors.isEmpty()) {
+        // If monitors disabled while we have some running monitors, we should
+        // stop them.
+        LOG.info(""Scheduling Monitor disabled, stopping all services"");
+        stopAndRemoveAll();
+      }
+
+      return;
+    }",p,/,/,/,/,/,/,no,/
+yarn,RM_TIMELINE_SERVER_V1_PUBLISHER_BATCH_ENABLED,if (isTimeLineServerBatchEnabled) {,p,/,/,/,/,/,/,no,/
+yarn,RM_WEBAPP_ENABLE_CORS_FILTER,"    if (enableCorsFilter) {
+      conf.setBoolean(HttpCrossOriginFilterInitializer.PREFIX
+          + HttpCrossOriginFilterInitializer.ENABLED_SUFFIX, true);
+    }",p,/,/,/,/,/,/,no,/
+yarn,RM_ZK_TIMEOUT_MS,"        while (!isFencedState()) {
+          // Create and delete fencing node
+          zkManager.createTransaction(zkAcl, fencingNodePath).commit();
+          Thread.sleep(zkSessionTimeout);
+        }",p,/,/,/,/,/,/,no,/
+yarn,ROUTER_APPSINFO_CACHED_COUNT,"      appInfosCaches = new LRUCacheHashMap<>(appInfosCacheCount, true);",p,/,/,/,/,/,/,no,/
+yarn,ROUTER_CLIENTRM_PARTIAL_RESULTS_ENABLED,"    if (returnPartialResult) {
+      return true;
+    }",p,/,/,/,/,/,/,no,/
+yarn,ROUTER_KERBEROS_PRINCIPAL_HOSTNAME_KEY,"    SecurityUtil.login(this.conf, YarnConfiguration.ROUTER_KEYTAB,
+        YarnConfiguration.ROUTER_PRINCIPAL, getHostName(this.conf));",p,/,/,/,/,/,/,no,/
+yarn,ROUTER_SCHEDULED_EXECUTOR_THREADS,this.scheduledExecutorService = new ScheduledThreadPoolExecutor(scheduledExecutorThreads);,p,/,/,/,/,/,/,no,/
+yarn,ROUTER_USER_CLIENT_THREAD_POOL_MINIMUM_POOL_SIZE,"    this.executorService = new ThreadPoolExecutor(numMinThreads, numMaxThreads,
+        keepAliveTime, TimeUnit.MILLISECONDS, workQueue, threadFactory);",p,/,/,/,/,/,/,no,/
+yarn,ROUTER_WEBAPP_DEFAULT_INTERCEPTOR_CLASS,"        interceptorInstance =
+            (DefaultRequestInterceptorREST) ReflectionUtils.newInstance(interceptorClass, conf);",p,/,/,/,/,/,/,no,/
+yarn,ROUTER_WEBAPP_ENABLE_CORS_FILTER,"    if (enableCors) {
+      conf.setBoolean(HttpCrossOriginFilterInitializer.PREFIX
+          + HttpCrossOriginFilterInitializer.ENABLED_SUFFIX, true);
+    }",p,/,/,/,/,/,/,no,/
+yarn,ROUTER_WEBAPP_INTERCEPTOR_CLASS_PIPELINE,"    Collection<String> tempList =
+        StringUtils.getStringCollection(configuredInterceptorClassNames);",p,/,/,/,/,/,/,no,/
+yarn,SHARED_CACHE_NM_UPLOADER_THREAD_COUNT,"uploaderPool = HadoopExecutors.newFixedThreadPool(threadCount,
+          new ThreadFactoryBuilder().
+            setNameFormat(""Shared cache uploader #%d"").
+            build());",p,/,/,/,/,/,/,no,/
+yarn,TIMELINE_SERVICE_CLIENT_BEST_EFFORT,"      if (timelineServiceBestEffort) {
+        LOG.warn(""Failed to get delegation token from the timeline server: {}"", e.getMessage());
+        return null;
+      }",p,/,/,/,/,/,/,no,/
+yarn,TIMELINE_SERVICE_ENABLED,"    if (conf.getBoolean(YarnConfiguration.TIMELINE_SERVICE_ENABLED,
+        YarnConfiguration.DEFAULT_TIMELINE_SERVICE_ENABLED)) {
+      timelineClient = TimelineClient.createTimelineClient();
+      timelineClient.init(conf);
+      timelineClient.start();
+    }",p,/,/,/,/,/,/,no,/
+yarn,TIMELINE_SERVICE_ENTITYGROUP_FS_STORE_THREADS,"    executor = new ScheduledThreadPoolExecutor(numThreads,
+        new ThreadFactoryBuilder().setNameFormat(""EntityLogPluginWorker #%d"")
+            .build());",p,/,/,/,/,/,/,no,/
+yarn,TIMELINE_SERVICE_HTTP_CROSS_ORIGIN_ENABLED,"      if(conf.getBoolean(YarnConfiguration.
+          TIMELINE_SERVICE_HTTP_CROSS_ORIGIN_ENABLED,
+          YarnConfiguration.
+          TIMELINE_SERVICE_HTTP_CROSS_ORIGIN_ENABLED_DEFAULT)) {
+        if (initializers.contains(
+            HttpCrossOriginFilterInitializer.class.getName())) {
+          initializers = initializers.replaceAll(
+              HttpCrossOriginFilterInitializer.class.getName(),
+              CrossOriginFilterInitializer.class.getName());
+        } else {
+          defaultInitializers.add(CrossOriginFilterInitializer.class.getName());
+        }
+      }",p,/,/,/,/,/,/,no,/
+yarn,TIMELINE_SERVICE_LEVELDB_CACHE_READ_CACHE_SIZE,"    options.cacheSize(conf.getLong(
+        YarnConfiguration.TIMELINE_SERVICE_LEVELDB_CACHE_READ_CACHE_SIZE,
+        YarnConfiguration.
+            DEFAULT_TIMELINE_SERVICE_LEVELDB_CACHE_READ_CACHE_SIZE));",p,/,/,/,/,/,/,no,/
+yarn,yarn.resourcemanager.webapp.address,"    String url = getRMWebAddress();
+    StringBuilder api = new StringBuilder();
+    api.append(url)
+        .append(""/app/v1/services"");",p,/,/,/,/,/,/,no,/
+yarn,YARN_CLIENT_APP_SUBMISSION_POLL_INTERVAL_MS,Thread.sleep(submitPollIntervalMillis);,p,/,/,/,/,/,/,no,/
+zookeeper,zookeeper.audit.enable,if (auditEnabled) {,p,/,/,/,/,/,/,no,/
+zookeeper,zookeeper.commitProcessor.numWorkerThreads,"workerPool = new WorkerService(""CommitProcWork"", numWorkerThreads, true);",p,/,/,/,/,/,/,no,/
+zookeeper,zookeeper.enableEagerACLCheck,"        if (!enableEagerACLCheck) {
+            return true;
+        }",p,/,/,/,/,/,/,no,/
+zookeeper,zookeeper.learner.asyncSending,if (asyncSending) {,p,/,/,/,/,/,/,no,/
+zookeeper,zookeeper.messageTracker.BufferSize,"this.sentBuffer = new CircularBuffer<>(BufferedMessage.class, buffer_size);",p,/,/,/,/,/,/,no,/

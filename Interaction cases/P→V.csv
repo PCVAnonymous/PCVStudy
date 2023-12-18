@@ -1,0 +1,1401 @@
+Software,Parameter,Code Snippet,Code Pattern,Overall Impact,Effect on Software Behavior,How to Control Software Behavior,Special Effect on Software,Bad consequences,Log Information,On-the-fly Update,"The ""Crisis"" Behind Specific Interactions"
+hbase,hbase.regionserver.handler.abort.on.error.percent,"        if (
+          this.handlerFailureThreshhold >= 0
+            && failedCount > handlerCount * this.handlerFailureThreshhold
+        ) {
+          String message = ""Number of failed RpcServer handler runs exceeded threshhold ""
+            + this.handlerFailureThreshhold + ""; reason: "" + StringUtils.stringifyException(e);
+          if (abortable != null) {
+            abortable.abort(message, e);
+          } else {
+            LOG.error(""Error but can't abort because abortable is null: ""
+              + StringUtils.stringifyException(e));
+            throw e;
+          }
+        }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,Prevent excessive resource utilization,/,"          String message = ""Number of failed RpcServer handler runs exceeded threshhold ""
+            + this.handlerFailureThreshhold + ""; reason: "" + StringUtils.stringifyException(e);",no,Inappropriate threshold in P¡úV
+hbase,hbase.hstore.flush.retries.number,"    for (int i = 0; i < flushRetriesNumber; i++) {
+      try {
+        List<Path> pathNames = flusher.flushSnapshot(snapshot, logCacheFlushId, status,
+          throughputController, tracker, writerCreationTracker);
+        Path lastPathName = null;
+        try {
+          for (Path pathName : pathNames) {
+            lastPathName = pathName;
+            storeEngine.validateStoreFile(pathName);
+          }
+          return pathNames;
+        } catch (Exception e) {
+          LOG.warn(""Failed validating store file {}, retrying num={}"", lastPathName, i, e);
+          if (e instanceof IOException) {
+            lastException = (IOException) e;
+          } else {
+            lastException = new IOException(e);
+          }
+        }
+      } catch (IOException e) {
+        LOG.warn(""Failed flushing store file for {}, retrying num={}"", this, i, e);
+        lastException = e;
+      }
+      if (lastException != null && i < (flushRetriesNumber - 1)) {
+        try {
+          Thread.sleep(pauseTime);
+        } catch (InterruptedException e) {
+          IOException iie = new InterruptedIOException();
+          iie.initCause(e);
+          throw iie;
+        }
+      }
+    }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,Prevent excessive resource utilization,/,"LOG.warn(""Failed validating store file {}, retrying num={}"", lastPathName, i, e);",no,Inappropriate threshold in P¡úV
+hbase,hbase.auth.key.update.interval,"        if (localLastKeyUpdate + keyUpdateInterval < now) {
+          // roll a new master key
+          rollCurrentKey();
+        }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.client.scanner.max.result.size,"    if (cacheSize >= maxCacheSize) {
+      stopPrefetch(controller);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"      LOG.debug(
+        ""{} stop prefetching when scanning {} as the cache size {}""
+          + "" is greater than the maxCacheSize {}"",
+        String.format(""0x%x"", System.identityHashCode(this)), tableName, cacheSize, maxCacheSize);",no,Inappropriate threshold in P¡úV
+hbase,hbase.region.store.parallel.put.print.threshold,"      if (this.currentParallelPutCount.getAndIncrement() > this.parallelPutCountPrintThreshold) {
+        LOG.trace(""tableName={}, encodedName={}, columnFamilyName={} is too busy!"",
+          this.getTableName(), this.getRegionInfo().getEncodedName(), this.getColumnFamilyName());
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"LOG.trace(""tableName={}, encodedName={}, columnFamilyName={} is too busy!"",
+          this.getTableName(), this.getRegionInfo().getEncodedName(), this.getColumnFamilyName());",no,Inappropriate threshold in P¡úV
+hbase,hbase.hstore.blockingStoreFiles,"      if (store.hasTooManyStoreFiles()) {
+        return true;
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.hstore.blockingStoreFiles,if (!region.getRegionInfo().isMetaRegion() && isTooManyStoreFiles(region)) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.hstore.compaction.min.size,"    while (
+      countOfFiles - start >= comConf.getMinFilesToCompact() && fileSizes[start]
+          > Math.max(comConf.getMinCompactSize(), (long) (sumSize[start + 1] * ratio))
+    ) {
+      ++start;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.mob.file.cache.size,"            if (map.size() > mobFileMaxCacheSize) {
+              evict();
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.hregion.preclose.flush.size,"  private boolean worthPreFlushing() {
+    return this.memStoreSizing.getDataSize()
+        > this.conf.getLong(""hbase.hregion.preclose.flush.size"", 1024 * 1024 * 5);
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.regionserver.maxlogs,"this.maxLogs = conf.getInt(MAX_LOGS, Math.max(32, calculateMaxLogFiles(conf, logrollsize)));
+    if (logCount > this.maxLogs && logCount > 0) {
+      Map.Entry<Path, WALProps> firstWALEntry = this.walFile2Props.firstEntry();
+      regions =
+        this.sequenceIdAccounting.findLower(firstWALEntry.getValue().encodedName2HighestSequenceId);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.master.mob.cleaner.period,else if (TEST_FORCE_REFRESH || (now - lastUpdate) >= refreshPeriod) {,P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.regionserver.storefile.refresh.period,"  protected boolean isRegionStale(String encodedName, long time) {
+    long lastRefreshTime = lastRefreshTimes.get(encodedName);
+    return time - lastRefreshTime > hfileTtl - period;
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.server.scanner.max.result.size,"        if (
+          context != null && context.isRetryImmediatelySupported()
+            && (context.getResponseCellSize() > maxQuotaResultSize
+              || blockBytesScannedBefore + context.getResponseExceptionSize() > maxQuotaResultSize)
+        ) {",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hbase,hbase.hregion.majorcompaction.jitter,return period + jitter - Math.round(2L * jitter * RNG.nextDouble());,P¡úV,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.namenode.checkpoint.max-retries,"        if (checkpointImage.getMergeErrorCount() > maxRetries) {
+          LOG.error(""Merging failed "" +
+              checkpointImage.getMergeErrorCount() + "" times."");
+          terminate(1);
+        }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,runtime error,"          LOG.error(""Merging failed "" +
+              checkpointImage.getMergeErrorCount() + "" times."");",no,Inappropriate threshold in P¡úV
+hdfs,dfs.client.max.block.acquire.failures,"    if (failures >= dfsClient.getConf().getMaxBlockAcquireFailures()) {
+      String description = ""Could not obtain block: "" + blockInfo;
+      DFSClient.LOG.warn(description + errMsg
+          + "". Throwing a BlockMissingException"");
+      throw new BlockMissingException(src, description + errMsg,
+          block.getStartOffset());
+    }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,runtime error,"      DFSClient.LOG.warn(description + errMsg
+          + "". Throwing a BlockMissingException"");",no,Inappropriate threshold in P¡úV
+hdfs,dfs.datanode.failed.volumes.tolerated,"      if (failedLocations.size() > maxVolumeFailuresTolerated) {
+        throw new DiskErrorException(""Too many failed volumes - ""
+            + ""current valid volumes: "" + goodLocations.size()
+            + "", volumes configured: "" + dataDirs.size()
+            + "", volumes failed: "" + failedLocations.size()
+            + "", volume failures tolerated: "" + maxVolumeFailuresTolerated);
+      }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.disk.balancer.max.disk.errors,"      while (!iter.atEnd() && item.getErrorCount() <= getMaxError(item)) {
+        try {
+          ExtendedBlock block = iter.nextBlock();
+          if(null == block){
+            LOG.info(""NextBlock call returned null. No valid block to copy. {}"",
+                item.toJson());
+            return null;
+          }
+          // A valid block is a finalized block, we iterate until we get
+          // finalized blocks
+          if (!this.dataset.isValidBlock(block)) {
+            continue;
+          }
+          // We don't look for the best, we just do first fit
+          if (isLessThanNeeded(block.getNumBytes(), item)) {
+            return block;
+          }
+        } catch (IOException e) {
+          item.incErrorCount();
+        }
+      }
+      if (item.getErrorCount() > getMaxError(item)) {
+        item.setErrMsg(""Error count exceeded."");
+        LOG.info(""Maximum error count exceeded. Error count: {} Max error:{} "",
+            item.getErrorCount(), item.getMaxDiskErrors());
+      }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,Prevent excessive resource utilization,/,"      if (item.getErrorCount() > getMaxError(item)) {
+        item.setErrMsg(""Error count exceeded."");
+        LOG.info(""Maximum error count exceeded. Error count: {} Max error:{} "",
+            item.getErrorCount(), item.getMaxDiskErrors());
+      }",no,Inappropriate threshold in P¡úV
+hdfs,dfs.ha.tail-edits.namenode-retries,"          if ((nnLoopCount / nnCount) >= maxRetries) {
+            return null;
+          }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.datanode.scan.period.hours,"        if (System.currentTimeMillis() - attr.lastAccessTime().
+            to(TimeUnit.MILLISECONDS) < conf.scanPeriodMs) {",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.datanode.scan.period.hours,long waitMs = (iterStartMs + conf.scanPeriodMs) - nowMs;,P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.checkpoint.period,"        if(now >= lastCheckpointTime + checkpointPeriodMSec) {
+          shouldCheckpoint = true;
+        }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.read-lock-reporting-threshold-ms,    if (needReport && readLockIntervalMs >= this.readLockReportingThresholdMs) {,P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.datanode.slow.io.warning.threshold.ms,"        if (duration > datanodeSlowLogThresholdMs) {
+          datanode.metrics.incrPacketsSlowWriteToMirror();
+          if (LOG.isWarnEnabled()) {
+            LOG.warn(""Slow BlockReceiver write packet to mirror took {}ms "" +
+                ""(threshold={}ms), downstream DNs={}, blockId={}, seqno={}"",
+                duration, datanodeSlowLogThresholdMs,
+                Arrays.toString(downstreamDNs), replicaInfo.getBlockId(),
+                seqno);
+          }
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,"            LOG.warn(""Slow BlockReceiver write packet to mirror took {}ms "" +
+                ""(threshold={}ms), downstream DNs={}, blockId={}, seqno={}"",
+                duration, datanodeSlowLogThresholdMs,
+                Arrays.toString(downstreamDNs), replicaInfo.getBlockId(),
+                seqno);
+          }",no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.redundancy.considerLoad.factor,"    if (considerLoadByVolume) {
+      final int numVolumesAvailable = node.getNumVolumesAvailable();
+      final double maxLoadForVolumes = considerLoadFactor * numVolumesAvailable *
+          stats.getInServiceXceiverAverageForVolume();
+      if (maxLoadForVolumes > 0.0 && nodeLoad > maxLoadForVolumes) {
+        logNodeIsNotChosen(node, NodeNotChosenReason.NODE_TOO_BUSY_BY_VOLUME,
+            ""(load: "" + nodeLoad + "" > "" + maxLoadForVolumes + "") "");
+        return true;
+      }
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"        logNodeIsNotChosen(node, NodeNotChosenReason.NODE_TOO_BUSY_BY_VOLUME,
+            ""(load: "" + nodeLoad + "" > "" + maxLoadForVolumes + "") "");",no,Inappropriate threshold in P¡úV
+hdfs,dfs.datanode.min.outlier.detection.nodes,"    if (stats.size() < minNumResources) {
+      LOG.debug(""Skipping statistical outlier detection as we don't have "" +
+              ""latency data for enough resources. Have {}, need at least {}"",
+          stats.size(), minNumResources);
+      return ImmutableMap.of();
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,"      LOG.debug(""Skipping statistical outlier detection as we don't have "" +
+              ""latency data for enough resources. Have {}, need at least {}"",
+          stats.size(), minNumResources);",yes,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.decommission.max.concurrent.tracked.nodes,"    if (numDecommissioningNodes > maxConcurrentTrackedNodes) {
+      LOG.warn(
+          ""{} nodes are decommissioning but only {} nodes will be tracked at a time. ""
+              + ""{} nodes are currently queued waiting to be decommissioned."",
+          numDecommissioningNodes, maxConcurrentTrackedNodes, numQueuedNodes);
+
+      // Re-queue unhealthy nodes to make space for decommissioning healthy nodes
+      getUnhealthyNodesToRequeue(unhealthyDns, numDecommissioningNodes).forEach(dn -> {
+        getPendingNodes().add(dn);
+        outOfServiceNodeBlocks.remove(dn);
+      });
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"      LOG.warn(
+          ""{} nodes are decommissioning but only {} nodes will be tracked at a time. ""
+              + ""{} nodes are currently queued waiting to be decommissioned."",
+          numDecommissioningNodes, maxConcurrentTrackedNodes, numQueuedNodes);",no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.redundancy.considerLoad.factor,"    final double maxLoad = considerLoadFactor * inServiceXceiverCount;
+
+    final int nodeLoad = node.getXceiverCount();
+    if ((nodeLoad > maxLoad) && (maxLoad > 0)) {
+      logNodeIsNotChosen(node, NodeNotChosenReason.NODE_TOO_BUSY,
+          ""(load: "" + nodeLoad + "" > "" + maxLoad + "")"");
+      return true;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation," ""(load: "" + nodeLoad + "" > "" + maxLoad + "")"");",no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.list.openfiles.num.responses,"        if (openFileIds.size() >= this.maxListOpenFilesResponses) {
+          return new BatchedListEntries<>(openFileEntries, true);
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.list.openfiles.num.responses,"      if (count >= numResponses) {
+        break;
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.safemode.threshold-pct,"      boolean isBlockThresholdMet = (blockSafe >= blockThreshold);
+      boolean isDatanodeThresholdMet = true;
+      if (isBlockThresholdMet && datanodeThreshold > 0) {
+        int datanodeNum = blockManager.getDatanodeManager().
+                getNumLiveDataNodes();
+        isDatanodeThresholdMet = (datanodeNum >= datanodeThreshold);
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.client.block.write.retries,"      if (totalBlockCount < dnConf.blockReportSplitThreshold) {
+        // Below split threshold, send all reports in a single message.
+        DatanodeCommand cmd = bpNamenode.blockReport(
+            bpRegistration, bpos.getBlockPoolId(), reports,
+            new BlockReportContext(1, 0, reportId, fullBrLeaseId));
+        blockReportSizes.add(
+            calculateBlockReportPBSize(useBlocksBuffer, reports));
+        numRPCs = 1;
+        numReportsSent = reports.length;
+        if (cmd != null) {
+          cmds.add(cmd);
+        }
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.client.socketcache.capacity,"    if (capacity == multimap.size()) {
+      evictOldest();
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.datanode.max.disks.to.report,"        if (topNReports.size() < numDisks) {
+          topNReports.add(diskLatency);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.datanode.max.transfer.threads,"        int curXceiverCount = datanode.getXceiverCount();
+        if (curXceiverCount > maxXceiverCount) {
+          throw new IOException(""Xceiver count "" + curXceiverCount
+              + "" exceeds the limit of concurrent xceivers: ""
+              + maxXceiverCount);
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+hdfs,dfs.image.parallel.target.sections,"        if (outputInodes >= parent.getInodesPerSubSection()) {
+          outputInodes = 0;
+          parent.commitSubSection(summary,
+              FSImageFormatProtobuf.SectionName.INODE_DIR_SUB);
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.decommission.backoff.monitor.pending.blocks.per.lock,"          if (blocksProcessed >= blocksPerLock) {
+            blocksProcessed = 0;
+            namesystem.writeUnlock(""moveBlocksToPending"");
+            namesystem.writeLock();
+          }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.max.slowpeer.collect.nodes,"        if (topNReports.size() < numNodes) {
+          topNReports.add(new SlowPeerJsonReport(entry.getKey(), validReports));
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.max-corrupt-file-blocks-returned,"            if (count >= maxCorruptFileBlocksReturn)
+              break;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.replication,"        for (int count = numLocations + 1;
+            count <= defaultReplication && count <= providedDescriptor
+                .activeProvidedDatanodes(); count++) {
+          dn = chooseProvidedDatanode(excludedUUids);
+          locs.add(new DatanodeInfoWithStorage(
+              dn, storageId, StorageType.PROVIDED));
+          sids.add(storageId);
+          types.add(StorageType.PROVIDED);
+          excludedUUids.add(dn.getDatanodeUuid());
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.replication.work.multiplier.per.iteration,for (; count < blocksToProcess && priority < LEVEL; priority++) {,P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.fs-limits.max-blocks-per-file,"    if (pendingFile.getBlocks().length >= fsn.maxBlocksPerFile) {
+      throw new IOException(""File has reached the limit on maximum number of""
+          + "" blocks ("" + DFSConfigKeys.DFS_NAMENODE_MAX_BLOCKS_PER_FILE_KEY
+          + ""): "" + pendingFile.getBlocks().length + "" >= ""
+          + fsn.maxBlocksPerFile);
+    }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.fs-limits.max-xattrs-per-inode,"    if (userVisibleXAttrsNum > fsd.getInodeXAttrsLimit()) {
+      throw new IOException(""Cannot add additional XAttr to inode, ""
+          + ""would exceed limit of "" + fsd.getInodeXAttrsLimit());
+    }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.fs-limits.min-block-size,"      if (blockSize < minBlockSize) {
+        throw new IOException(""Specified block size "" + blockSize +
+            "" is less than configured minimum value "" +
+            DFSConfigKeys.DFS_NAMENODE_MIN_BLOCK_SIZE_KEY + ""="" + minBlockSize);
+      }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hdfs,dfs.namenode.fs-limits.max-component-length,"    if (length > maxComponentLength) {
+      final PathComponentTooLongException e = new PathComponentTooLongException(
+          maxComponentLength, length, parentPath,
+          DFSUtil.bytes2String(childName));
+      if (namesystem.isImageLoaded()) {
+        throw e;
+      } else {
+        // Do not throw if edits log is still being processed
+        NameNode.LOG.error(""ERROR in FSDirectory.verifyINodeName"", e);
+      }
+    }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hdfs,nfs.max.open.files,"      Preconditions.checkState(size() <= this.maxStreams,
+          ""stream cache size "" + size() + ""  is larger than maximum"" + this
+              .maxStreams);",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hive,hive.notification.sequence.lock.max.retries,"          if (currentRetries >= maxRetries) {
+            String message =
+                ""Couldn't acquire the DB log notification lock because we reached the maximum""
+                    + "" # of retries: "" + maxRetries
+                    + "" retries. If this happens too often, then is recommended to ""
+                    + ""increase the maximum number of retries on the""
+                    + "" hive.notification.sequence.lock.max.retries configuration"";
+            LOG.error(message, e);
+            throw new MetaException(message + "" :: "" + e.getMessage());
+          }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,runtime error,"            String message =
+                ""Couldn't acquire the DB log notification lock because we reached the maximum""
+                    + "" # of retries: "" + maxRetries
+                    + "" retries. If this happens too often, then is recommended to ""
+                    + ""increase the maximum number of retries on the""
+                    + "" hive.notification.sequence.lock.max.retries configuration"";
+            LOG.error(message, e);",no,Inappropriate threshold in P¡úV
+hive,hive.metastore.connect.retries,for (int attempt = 0; !isConnected && attempt < retries; ++attempt) {,P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hive,hive.repl.bootstrap.dump.open.txn.timeout,"    while (System.currentTimeMillis() < waitUntilTime) {
+      //check if no open txns at all
+      List<Long> openTxnListForAllDbs = getOpenTxns(validTxnList);
+      if (openTxnListForAllDbs.isEmpty()) {
+        return validTxnList.toString();
+      }
+      //check if all transactions that are open are inserted into the hive locks table. If not wait and check again.
+      //Transactions table don't contain the db information. DB information is present only in the hive locks table.
+      //Transactions are inserted into the hive locks table after compilation. We need to make sure all transactions
+      //that are open have a entry in hive locks which can give us the db information and then we only wait for open
+      //transactions for the db under replication and not for all open transactions.
+      if (getTxnsNotPresentInHiveLocksTable(openTxnListForAllDbs).isEmpty()) {
+        //If all open txns have been inserted in the hive locks table, we just need to check for the db under replication
+        // If there are no txns which are open for the given db under replication, then just return it.
+        if (getOpenTxns(hiveTxnManager, validTxnList, work.dbNameOrPattern).isEmpty()) {
+          return validTxnList.toString();
+        }
+      }
+      // Wait for 5 minutes and check again.
+      try {
+        Thread.sleep(getSleepTime());
+      } catch (InterruptedException e) {
+        LOG.info(""REPL DUMP thread sleep interrupted"", e);
+      }
+      validTxnList = hiveTxnManager.getValidTxns(excludedTxns);
+    }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+hive,SCRIPTERRORLIMIT,"      if (bytesCopied < maxBytes && bytesCopied + len >= maxBytes) {
+        System.err.println(""Operator "" + id + "" "" + getName()
+            + "": exceeding stderr limit of "" + maxBytes
+            + "" bytes, will truncate stderr messages."");
+      }
+      bytesCopied += len;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"        System.err.println(""Operator "" + id + "" "" + getName()
+            + "": exceeding stderr limit of "" + maxBytes
+            + "" bytes, will truncate stderr messages."");",no,Inappropriate threshold in P¡úV
+hive,hive.exec.copyfile.maxnumfiles,"    boolean result = size > maxCopyFileSize && numberOfFiles > maxNumberOfFiles;
+    if (result) {
+      LOG.info(""Source is {} bytes. (MAX: {})"", size, maxCopyFileSize);
+      LOG.info(""Source is {} files. (MAX: {})"", numberOfFiles, maxNumberOfFiles);
+      LOG.info(""going to launch distributed copy (distcp) job."");
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"      LOG.info(""Source is {} bytes. (MAX: {})"", size, maxCopyFileSize);
+      LOG.info(""Source is {} files. (MAX: {})"", numberOfFiles, maxNumberOfFiles);
+      LOG.info(""going to launch distributed copy (distcp) job."");",no,Inappropriate threshold in P¡úV
+hive,hive.exec.max.created.files,"    if (numFiles > upperLimit) {
+      errMsg.append(""total number of created files now is "" + numFiles + "", which exceeds "").append(upperLimit);
+      return true;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"errMsg.append(""total number of created files now is "" + numFiles + "", which exceeds "").append(upperLimit);",no,Inappropriate threshold in P¡úV
+hive,hive.optimize.topnkey.efficiency.threshold,"      if (filter.getTotal() >= checkEfficiencyNumRows && filter.forwardingRatio() >= efficiencyThreshold) {
+        log.info(""Disabling TopN Filter {}"", filter);
+        disabledPartitions.add(partitionKey);
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,"log.info(""Disabling TopN Filter {}"", filter);",no,Inappropriate threshold in P¡úV
+hive,SCRIPTERRORLIMIT,"      if ((maxBytes < 0) || (bytesCopied < maxBytes)) {
+        System.err.println(stringLine);
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.exec.parallel.thread.number,"    if (runnable.peek() != null && running.size() < maxthreads) {
+      return runnable.remove();
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.repl.stats.events.count,"      if (topKEntries.size() > k) {
+        topKEntries.remove(k);
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,HIVEJOINCACHESIZE,"    if (windowLimit < (start.getAmt() + end.getAmt() + 1)) {
+      return false;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,THRIFT_CONNECTION_RETRIES,for (int attempt = 0; !isConnected && attempt < retries; ++attempt) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.direct.sql.max.query.length,      if ((querySize > maxQueryLength * 1024) || (currentCount >= maxParameters)) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.join.cache.size,"    if (windowLimit < (start.getAmt() + end.getAmt() + 1)) {
+      return false;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.map.aggr.hash.percentmemory,"        if (estHashTableSize < maxMemHashAgg) {
+          return true;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.mapjoin.smalltable.filesize,"    if (aliasKnownSize > 0 &&
+        aliasTotalKnownInputSize - aliasKnownSize > ThresholdOfSmallTblSizeSum) {
+      return true;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.metastore.limit.partition.request,"      if (partitionRequest > partitionLimit) {
+        String configName = ConfVars.LIMIT_PARTITION_REQUEST.toString();
+        throw new MetaException(String.format(PARTITION_NUMBER_EXCEED_LIMIT_MSG, partitionRequest,
+            tblName, partitionLimit, configName));
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,metastore.aggregate.stats.cache.size,"    if (getCurrentNodes() / maxCacheNodes > maxFull) {
+      spawnCleaner();
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.hook.proto.queue.capacity,"          if (logWriter.getQueue().size() < queueCapacity) {
+            logWriter.execute(() -> writeEvent(event));
+          } else {
+            LOG.warn(""Writer queue full ignoring event {} for query {}"",
+              hookContext.getHookType(), plan.getQueryId());
+          }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.llap.io.encode.slice.row.count,if (maySplitTheSplit && ++rowsPerSlice == targetSliceRowCount) {,P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.txn.acid.metrics.delta.pct.threshold,"        if (baseSize != 0 && deltaSize / (float) baseSize < deltaPctThreshold) {
+          numSmallDeltas++;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.write.notification.max.batch.size,"          if (requestList != null && requestList.size() >= maxBatchSize) {
+            // If the first call returns that the HMS does not supports batching, avoid batching
+            // for later requests.
+            boolean batchSupported = addWriteNotificationLogInBatch(tbl, requestList);
+            if (batchSupported) {
+              requestList.clear();
+            } else {
+              requestList = null;
+            }
+          }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+hive,hive.mapjoin.optimized.hashtable.wbsize,"    if (maxCapacity < initialCapacity || initialCapacity <= 0) {
+      // Either initialCapacity is too large, or nextHighestPowerOfTwo overflows
+      initialCapacity = (Long.bitCount(maxCapacity) == 1)
+          ? maxCapacity : nextLowestPowerOfTwo(maxCapacity);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,unexpected results,/,no,Inappropriate threshold in P¡úV
+hive,hive.exec.max.dynamic.partitions,"    if (partsToLoad > maxPartition) {
+      throw new HiveException(""Number of dynamic partitions created is "" + partsToLoad
+          + "", which is more than ""
+          + maxPartition
+          +"". To solve this try to set "" + HiveConf.ConfVars.DYNAMICPARTITIONMAXPARTS.varname
+          + "" to at least "" + partsToLoad + '.');
+    }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+hive,hive.file.max.footer,"      if (footerCount > HiveConf.getIntVar(job, HiveConf.ConfVars.HIVE_FILE_MAX_FOOTER)) {
+        throw new IOException(""footer number exceeds the limit defined in hive.file.max.footer"");
+      }",P¡úV,Reliability,Workload Adaption,Resource Limitation,/,runtime error,/,no,Inappropriate threshold in P¡úV
+httpd,MDRetryFailover,"        if (d->md->ca_urls->nelts > 1 && d->attempt >= d->retry_failover) {
+            /* We have more than one CA to choose from and this is the (at least)
+             * third attempt with the same CA. Let's switch to the next one. */
+            int last_idx = md_array_str_index(d->md->ca_urls, ca_effective, 0, 1);
+            if (last_idx >= 0) {
+                int next_idx = (last_idx+1) % d->md->ca_urls->nelts;
+                ca_effective = APR_ARRAY_IDX(d->md->ca_urls, next_idx, const char*);
+            }
+            else {
+                /* not part of current configuration? */
+                ca_effective = NULL;
+            }
+            /* switching CA means we need to wipe the staging area */
+            reset_staging = 1;
+        }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+httpd,locktimeout,"        if (lock->timeout != DAV_TIMEOUT_INFINITE
+            && lock->timeout < time(NULL) + conf->locktimeout)
+            lock->timeout = time(NULL) + conf->locktimeout;",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+httpd,DeflateInflateRatioLimit,"                    if (inflate_limit && ctx->inflate_total > inflate_limit) { 
+                        inflateEnd(&ctx->stream);
+                        ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(02647)
+                                      ""Inflated content length of %"" APR_OFF_T_FMT
+                                      "" is larger than the configured limit""
+                                      "" of %"" APR_OFF_T_FMT, 
+                                      ctx->inflate_total, inflate_limit);
+                        return APR_ENOSPC;
+                    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"                        ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(02647)
+                                      ""Inflated content length of %"" APR_OFF_T_FMT
+                                      "" is larger than the configured limit""
+                                      "" of %"" APR_OFF_T_FMT, 
+                                      ctx->inflate_total, inflate_limit);
+                        return APR_ENOSPC;",yes,Inappropriate threshold in P¡úV
+httpd,limit_xml_body,"            if (total_read > limit_xml_body) {
+                ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(00539)
+                              ""XML request body is larger than the configured ""
+                              ""limit of %lu"", (unsigned long)limit_xml_body);
+                result = HTTP_REQUEST_ENTITY_TOO_LARGE;
+                goto read_error;
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"                ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(00539)
+                              ""XML request body is larger than the configured ""
+                              ""limit of %lu"", (unsigned long)limit_xml_body);
+                result = HTTP_REQUEST_ENTITY_TOO_LARGE;",yes,Inappropriate threshold in P¡úV
+httpd,SSLVerifyDepth,"    if (errdepth > depth) {
+        ap_log_cerror(APLOG_MARK, APLOG_ERR, 0, conn, APLOGNO(02040)
+                      ""Certificate Verification: Certificate Chain too long ""
+                      ""(chain has %d certificates, but maximum allowed are ""
+                      ""only %d)"",
+                      errdepth, depth);
+
+        errnum = X509_V_ERR_CERT_CHAIN_TOO_LONG;
+        sslconn->verify_error = X509_verify_cert_error_string(errnum);
+
+        ok = FALSE;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"        ap_log_cerror(APLOG_MARK, APLOG_ERR, 0, conn, APLOGNO(02040)
+                      ""Certificate Verification: Certificate Chain too long ""
+                      ""(chain has %d certificates, but maximum allowed are ""
+                      ""only %d)"",
+                      errdepth, depth);",yes,Inappropriate threshold in P¡úV
+httpd,async_filter,"    if (f->frec->ftype < f->c->async_filter) {
+        return 0;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,ca_challenges,"    for (i = 0; i < challenges->nelts; ++i) {
+        fctx.type = APR_ARRAY_IDX(challenges, i, const char *);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,CacheMaxFileSize,"            if (dobj->file_size > dconf->maxfs) {
+                ap_log_rerror(
+                        APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(00732) ""URL %s failed the size check ""
+                        ""(%"" APR_OFF_T_FMT "">%"" APR_OFF_T_FMT "")"", h->cache_obj->key, dobj->file_size, dconf->maxfs);
+                /* Remove the intermediate cache file and return non-APR_SUCCESS */
+                apr_pool_destroy(dobj->data.pool);
+                return APR_EGENERAL;
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,CacheSocacheMaxSize,"    if (len > dconf->max) {
+        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(02347)
+                ""URL '%s' body larger than limit, ignoring ""
+                ""(%"" APR_OFF_T_FMT "" > %"" APR_OFF_T_FMT "")"",
+                key, len, dconf->max);
+        return DECLINED;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,deflatebufferSize,"    if (block == APR_BLOCK_READ &&
+            APR_BRIGADE_EMPTY(ctx->proc_bb) &&
+            ctx->stream.avail_out < c->bufferSize) {
+        consume_buffer(ctx, c, c->bufferSize - ctx->stream.avail_out,
+                       UPDATE_CRC, ctx->proc_bb);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,fin_max_in_rustls,while (!APR_BRIGADE_EMPTY(fctx->fin_tls_bb) && passed < (apr_off_t)len) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,flush_max_pipelined,"        if (is_flush
+            || (memory_bytes_in_brigade > flush_max_threshold)
+            || (flush_max_pipelined >= 0
+                && eor_buckets_in_brigade > flush_max_pipelined)) {",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,flush_max_threshold,"        if (nbytes > sconf->flush_max_threshold
+                && next != APR_BRIGADE_SENTINEL(bb)
+                && next->length && !is_in_memory_bucket(next)) {
+            sock_nopush(s, 1);
+            rv = writev_nonblocking(s, bb, ctx, nbytes, nvec, c);
+            if (rv != APR_SUCCESS) {
+                goto cleanup;
+            }
+            nbytes = 0;
+            nvec = 0;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,fout_auto_flush_size,if ((apr_off_t)n + fctx->fout_bytes_in_tls_bb >= (apr_off_t)fctx->fout_auto_flush_size) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,H2MaxSessionStreams,"    if (stream->session->max_data_frame_len > 0
+        && length > stream->session->max_data_frame_len) {
+      length = stream->session->max_data_frame_len;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,logbytes,"    if (!conf->logname ||
+        ((stat(conf->logname, &finfo) == 0)
+         && (finfo.st_size > conf->logbytes)) ||
+         (apr_file_open(&f, conf->logname,
+                  APR_APPEND|APR_WRITE|APR_CREATE, APR_OS_DEFAULT, r->pool) != APR_SUCCESS)) {",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,max_ranges,"    if (num_ranges == 0 ||
+        (max_ranges >= 0 && num_ranges > max_ranges) ||
+        (max_overlaps >= 0 && overlaps > max_overlaps) ||
+        (max_reversals >= 0 && reversals > max_reversals)) {
+        r->status = original_status;
+        ap_remove_output_filter(f);
+        return ap_pass_brigade(f->next, bb);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,redirect_limit,"            if (++redirects >= rlimit) {
+                /* uuh, too much. */
+                /* As we check before a new internal redirect, top->prev->uri
+                 * should be the original request causing this.
+                 */
+                ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(00124)
+                              ""Request (%s) exceeded the limit of %d internal ""
+                              ""redirects due to probable configuration error. ""
+                              ""Use 'LimitInternalRecursion' to increase the ""
+                              ""limit if necessary. Use 'LogLevel debug' to get ""
+                              ""a backtrace."", top->prev->uri, rlimit);
+
+                /* post backtrace */
+                log_backtrace(r);
+
+                /* return failure */
+                return 1;
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,thread_limit,"        for (j = 0; j < thread_limit; ++j) {
+            ws = ap_get_scoreboard_worker_from_indexes(i, j);
+            if (ws->status == SERVER_BUSY_READ) {
+                n = apr_hash_get(connections, ws->client64, APR_HASH_KEY_STRING);
+                if (n == NULL) {
+                    n = totals + index++;
+                    *n = 0;
+                }
+                ++*n;
+                apr_hash_set(connections, ws->client64, APR_HASH_KEY_STRING, n);
+            }
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,d_components,"                if (entry_core->r || entry_core->d_components > seg) {
+                    break;
+                }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,limit_req_body,"    if (limit_req_body > 0 && (r->remaining > limit_req_body)) {
+        /* 01588 msg in HTTP_IN filter will be skipped for a connection-dropping status,
+         * in r->status, so log a similar message here.
+         */
+        ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(10483)
+                ""Requested content-length of %"" APR_OFF_T_FMT
+                "" is larger than the configured limit""
+                "" of %"" APR_OFF_T_FMT, r->remaining, limit_req_body);
+
+        return HTTP_REQUEST_ENTITY_TOO_LARGE;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,RewriteCond,for (i = 0; i < rewriteconds->nelts; ++i) {,P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,LDAPCacheTTL,"            if ((curtime - search_nodep->lastbind) > st->search_cache_ttl) {
+                /* ...but entry is too old */
+                util_ald_cache_remove(curl->search_cache, search_nodep);
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+httpd,SubstituteMaxLineLength,"                if (fbytes > cfg->max_line_length) {
+                    rv = APR_ENOMEM;
+                    goto err;
+                }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,yes,Inappropriate threshold in P¡úV
+httpd,tls_protocol_min,if (oc->tls_protocol_min > 0 && cc->tls_protocol_id < oc->tls_protocol_min) return 0;,P¡úV,Functionality and Others,/,/,/,/,/,yes,/
+mapreduce,mapreduce.job.maxtaskfailures.per.tracker,"    LOG.info(failures + "" failures on node "" + hostName);
+    if (failures >= maxTaskFailuresPerNode) {",P¡úV,Reliability,Fault Tolerance,Retry Limitation,Prevent excessive resource utilization,/,"    LOG.info(failures + "" failures on node "" + hostName);",no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.maxtaskfailures.per.tracker,"    if (failures >= maxTaskFailuresPerNode) {
+      blacklistedNodes.add(hostName);
+      if (!ignoreBlacklisting.get()) {
+        blacklistAdditions.add(hostName);
+      }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.map.maxattempts,"        if (failedAttempts.size() >= maxAttempts) {
+          taces = TaskAttemptCompletionEventStatus.TIPFAILED;
+        }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.reducer.preempt.delay.sec,"    for (ContainerRequest request: requestMap.values()) {
+      long delay = currTime - request.requestTimeMs;
+      if (delay > allocationDelayThresholdMs)
+        hangingRequests++;
+    }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.local-fs.single-disk-limit.bytes,"            if (localWritesSize > fsLimit) {
+              String localStatus =
+                  ""too much data in local scratch dir=""
+                      + largestWorkDir
+                      + "". current size is ""
+                      + localWritesSize
+                      + "" the limit is "" + fsLimit;
+              if (killOnLimitExceeded) {
+                LOG.error(localStatus);
+                diskLimitCheckStatus = localStatus;
+              } else {
+                LOG.warn(localStatus);
+              }
+              break;
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"              String localStatus =
+                  ""too much data in local scratch dir=""
+                      + largestWorkDir
+                      + "". current size is ""
+                      + localWritesSize
+                      + "" the limit is "" + fsLimit;
+              if (killOnLimitExceeded) {
+                LOG.error(localStatus);",no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.running.map.limit,"    if (maxRunningMaps > 0 && numScheduledMaps > 0 &&
+        getJob().getTotalMaps() > maxRunningMaps) {",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.running.map.limit,"  private boolean canAssignMaps() {
+    return (maxRunningMaps <= 0
+        || assignedRequests.maps.size() < maxRunningMaps);
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.task.io.sort.factor,"      if (numMemDiskSegments > 0 &&
+            ioSortFactor > onDiskMapOutputs.size()) {",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.max.split.locations,"        if (locations.length > maxBlockLocations) {
+          LOG.warn(""Max block location exceeded for split: ""
+              + split + "" splitsize: "" + locations.length +
+              "" maxsize: "" + maxBlockLocations);
+          locations = Arrays.copyOf(locations, maxBlockLocations);
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.speculative.speculative-cap-running-tasks,"      if (bestTaskID != null
+          && numberAllowedSpeculativeTasks > numberSpeculationsAlready) {
+        addSpeculativeAttempt(bestTaskID);
+        ++successes;
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.reduce.input.buffer.percent,"    while(fullSize > leaveBytes) {
+      InMemoryMapOutput<K,V> mo = inMemoryMapOutputs.remove(0);
+      byte[] data = mo.getMemory();
+      long size = data.length;
+      totalSize += size;
+      fullSize -= size;
+      Reader<K,V> reader = new InMemoryReader<K,V>(MergeManagerImpl.this, 
+                                                   mo.getMapId(),
+                                                   data, 0, (int)size, jobConf);
+      inMemorySegments.add(new Segment<K,V>(reader, true, 
+                                            (mo.isPrimaryMapOutput() ? 
+                                            mergedMapOutputsCounter : null)));
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.running.reduce.limit,"    if (maxRunningReduces > 0 && numScheduledReduces > 0 &&
+        getJob().getTotalReduces() > maxRunningReduces) {
+      int maxRequestedReduces = Math.max(0,
+          maxRunningReduces - assignedRequests.reduces.size());
+      int reduceRequestLimit = Math.min(maxRequestedReduces,
+          numScheduledReduces);
+      setRequestLimit(PRIORITY_REDUCE, reduceResourceRequest,
+          reduceRequestLimit);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.reduce.merge.inmem.threshold,"    if (commitMemory >= mergeThreshold) {
+      LOG.info(""Starting inMemoryMerger's merge since commitMemory="" +
+          commitMemory + "" > mergeThreshold="" + mergeThreshold + 
+          "". Current usedMemory="" + usedMemory);
+      inMemoryMapOutputs.addAll(inMemoryMergedMapOutputs);
+      inMemoryMergedMapOutputs.clear();
+      inMemoryMerger.startMerge(inMemoryMapOutputs);
+      commitMemory = 0L;  // Reset commitMemory.
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.maps,"    if ((failureCounts.size() >= maxFailedUniqueFetches ||
+        failureCounts.size() == (totalMaps - doneMaps))
+        && !reducerHealthy
+        && (!reducerProgressedEnough || reducerStalled)) {
+      LOG.error(""Shuffle failed with too many fetch failures "" +
+      ""and insufficient progress!"");
+      String errorMsg = ""Exceeded MAX_FAILED_UNIQUE_FETCHES; bailing-out."";
+      reporter.reportException(new IOException(errorMsg));
+    }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.job.counters.max,"    if (size > countersMax) {
+      firstViolation = new LimitExceededException(""Too many counters: ""+ size +
+                                                  "" max=""+ countersMax);
+      throw firstViolation;
+    }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+mapreduce,mapreduce.map.cpu.vcores,boolean smallCpu = requiredCores <= sysCPUSizeForUberSlot;,P¡úV,Functionality and Others,/,/,/,/,/,no,/
+mysql,net_retry_count,retry = vio_should_retry(net->vio) && ((*retry_count)++ < net->retry_count);,P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+mysql,slave_transaction_retries,"  if (trans_retries >= slave_trans_retries) {
+    thd->fatal_error();
+    c_rli->report(ERROR_LEVEL, thd->get_stmt_da()->mysql_errno(),
+                  ""worker thread retried transaction %lu time(s) ""
+                  ""in vain, giving up. Consider raising the value of ""
+                  ""the replica_transaction_retries variable."",
+                  trans_retries);
+    return std::make_tuple(true, silent, error);
+  }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+mysql,connection_control_failed_connections_threshold,  if (current_count >= threshold || current_count < 0) {,P¡úV,Reliability,Fault Tolerance,Retry Limitation,Prevent excessive resource utilization,/,/,yes,Inappropriate threshold in P¡úV
+mysql,ndb_wait_connected,"  const auto timeout_time =
+      std::chrono::steady_clock::now() + std::chrono::seconds(max_wait_seconds);
+
+  while (std::chrono::steady_clock::now() < timeout_time) {
+    if (connection->get_no_ready() > 0) {
+      // At least one data node is alive
+      return true;
+    }
+    ndb_milli_sleep(100);
+  }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+mysql,ndb_wait_connected,"  while (std::chrono::steady_clock::now() < timeout_time) {
+    if (connection->get_no_ready() > 0) {
+      // At least one data node is alive
+      return true;
+    }
+    ndb_milli_sleep(100);
+  }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+mysql,global_connection_memory_limit,"  if (mem_counter > m_thd->variables.conn_mem_limit) {
+#ifndef NDEBUG
+    // Used for testing the entering to idle state
+    // after successful statement execution (see mem_cnt_common_debug.test).
+    if (!DBUG_EVALUATE_IF(""mem_cnt_no_error_on_exec_session"", 1, 0))
+#endif
+      (void)generate_error(ER_DA_CONN_LIMIT, m_thd->variables.conn_mem_limit,
+                           mem_counter);
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"      (void)generate_error(ER_DA_CONN_LIMIT, m_thd->variables.conn_mem_limit,
+                           mem_counter);",yes,Inappropriate threshold in P¡úV
+mysql,connection_memory_limit,"  if (mem_counter > m_thd->variables.conn_mem_limit) {
+#ifndef NDEBUG
+    // Used for testing the entering to idle state
+    // after successful statement execution (see mem_cnt_common_debug.test).
+    if (!DBUG_EVALUATE_IF(""mem_cnt_no_error_on_exec_session"", 1, 0))
+#endif
+      (void)generate_error(ER_DA_CONN_LIMIT, m_thd->variables.conn_mem_limit,
+                           mem_counter);
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"      (void)generate_error(ER_DA_CONN_LIMIT, m_thd->variables.conn_mem_limit,
+                           mem_counter);",yes,Inappropriate threshold in P¡úV
+mysql,optimizer_trace_limit,} else if (pimpl->since_offset_0 >= (pimpl->offset + pimpl->limit)) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"      DBUG_PRINT(""opt"", (""disabled: since_offset_0(%ld) >=""
+                         "" offset(%ld) + limit(%ld)"",
+                         pimpl->since_offset_0, pimpl->offset, pimpl->limit));",yes,Inappropriate threshold in P¡úV
+mysql,cte_max_recursion_depth,"    if (++m_recursive_iteration_count >
+        thd()->variables.cte_max_recursion_depth) {
+      my_error(ER_CTE_MAX_RECURSION_DEPTH, MYF(0), m_recursive_iteration_count);
+      return 1;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"my_error(ER_CTE_MAX_RECURSION_DEPTH, MYF(0), m_recursive_iteration_count);",yes,Inappropriate threshold in P¡úV
+mysql,group_replication_transaction_size_limit,"  if (is_dml && transaction_size_limit &&
+      transaction_size > transaction_size_limit) {
+    LogPluginErr(ERROR_LEVEL, ER_GRP_RPL_TRANS_SIZE_EXCEEDS_LIMIT,
+                 param->thread_id, transaction_size, transaction_size_limit);
+    error = pre_wait_error;
+    goto err;
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,host_cache_size,"    if (hostname_cache_lru->size() >= hostname_cache_max_size) {
+      hostname_cache_by_ip->erase(hostname_cache_lru->front()->ip_key);
+      hostname_cache_lru->pop_front();
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,ft_max_word_len,"    if (skip_stopwords == false ||
+        (length >= ft_min_word_len && length < ft_max_word_len &&
+         !is_stopword((char *)word->pos, word->len))) {
+      *start = doc;
+      return 1;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mysql,innodb_commit_concurrency,"      while (innobase_commit_concurrency > 0) {
+        mysql_mutex_lock(&commit_cond_m);
+
+        ++commit_threads;
+
+        if (commit_threads <= innobase_commit_concurrency) {
+          mysql_mutex_unlock(&commit_cond_m);
+          break;
+        }
+
+        --commit_threads;
+
+        mysql_cond_wait(&commit_cond, &commit_cond_m);
+
+        mysql_mutex_unlock(&commit_cond_m);
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,binlog_group_commit_sync_no_delay_count,"  while (
+      to_wait > 0 &&
+      (count == 0 || static_cast<ulong>(m_queue[stage].get_size()) < count)) {",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,bulk_insert_buffer_size,"  if (num_keys == 0 || num_keys * MI_MIN_SIZE_BULK_INSERT_TREE > cache_size)
+    return 0;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,clone_max_io_bandwidth,"    if (data_speed > max_io) {
+      return (true);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,innodb_concurrency_tickets,"    if (trx->n_tickets_to_enter_innodb > 0) {
+      /* If trx has 'free tickets' to enter the engine left,
+      then use one such ticket */
+
+      --trx->n_tickets_to_enter_innodb;
+
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,binlog_transaction_dependency_history_size,"      if (write_set.size() >= binlog_trx_dependency_history_size) {
+        m_local_has_reached_write_set_limit = true;
+        clear_write_set();
+        return false;
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,group_replication_autorejoin_tries,while (!m_abort && num_attempts++ < m_attempts) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,group_replication_clone_threshold,"    if (count >= num) return true;
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,optimizer_trace_max_mem_size,"  const size_t rc =
+      (mem_size <= pimpl->max_mem_size) ? (pimpl->max_mem_size - mem_size) : 0;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,profiling_history_size,"  while (history.elements > thd->variables.profiling_history_size)
+    delete history.pop();",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,replica_pending_jobs_size_max,bool big_event = (ev_size > rli->mts_pending_jobs_size_max);,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,innodb_ft_cache_size,"        if ((cache->total_size - cache->total_size_before_sync >
+                 fts_max_cache_size / 10 ||
+             fts_need_sync) &&
+            !cache->sync->in_progress) {
+          need_sync = true;
+          cache->total_size_before_sync = cache->total_size;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+mysql,stored_program_cache,"  void enforce_limit(ulong upper_limit_for_elements) {
+    if (m_hashtable.size() > upper_limit_for_elements) m_hashtable.clear();
+  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,sync_masterinfo_period,if (!error && (force || (sync_period && ++(sync_counter) >= sync_period))) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+mysql,myisam_mmap_size,"      eom = data_file_length >
+            myisam_mmap_size - myisam_mmap_used - MEMMAP_EXTRA_MARGIN;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,unexpected results,/,yes,Inappropriate threshold in P¡úV
+nginx,max_errors,"        if (s->errors >= cscf->max_errors) {
+            ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                          ""client sent too many invalid commands"");
+            s->quit = 1;
+        }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,"            ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                          ""client sent too many invalid commands"");",yes,Inappropriate threshold in P¡úV
+nginx,fastcgi_next_upstream_tries,"    if (pscf->next_upstream_tries
+        && u->peer.tries > pscf->next_upstream_tries)
+    {
+        u->peer.tries = pscf->next_upstream_tries;
+    }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+nginx,open_file_cache_valid,"        if (file->use_event
+            || (file->event == NULL
+                && (of->uniq == 0 || of->uniq == file->uniq)
+                && now - file->created < of->valid",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+nginx,lingering_timeout,"    if (timer > clcf->lingering_timeout) {
+        timer = clcf->lingering_timeout;
+    }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+nginx,limit_conn,"            if ((ngx_uint_t) lc->conn >= limits[i].conn) {
+
+                ngx_shmtx_unlock(&ctx->shpool->mutex);
+
+                ngx_log_error(lccf->log_level, r->connection->log, 0,
+                              ""limiting connections%s by zone \""%V\"""",
+                              lccf->dry_run ? "", dry run,"" : """",
+                              &limits[i].shm_zone->shm.name);
+
+                ngx_http_limit_conn_cleanup_all(r->pool);
+
+                if (lccf->dry_run) {
+                    r->main->limit_conn_status =
+                                          NGX_HTTP_LIMIT_CONN_REJECTED_DRY_RUN;
+                    return NGX_DECLINED;
+                }
+
+                r->main->limit_conn_status = NGX_HTTP_LIMIT_CONN_REJECTED;
+
+                return lccf->status_code;
+            }
+
+            lc->conn++;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"                ngx_log_error(lccf->log_level, r->connection->log, 0,
+                              ""limiting connections%s by zone \""%V\"""",
+                              lccf->dry_run ? "", dry run,"" : """",
+                              &limits[i].shm_zone->shm.name);",yes,Inappropriate threshold in P¡úV
+nginx,large_client_header_buffers,"            if (n > cscf->large_client_header_buffers.size) {
+                ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                              ""client sent too large field line"");
+                return NGX_HTTP_V3_ERR_EXCESSIVE_LOAD;
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"                ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                              ""client sent too large field line"");",yes,Inappropriate threshold in P¡úV
+nginx,hls_mp4_max_buffer_size,"        if (atom_data_size > conf->max_buffer_size) {
+            ngx_log_error(NGX_LOG_ERR, mp4->file.log, 0,
+                          ""\""%s\"" mp4 moov atom is too large:%uL, ""
+                          ""you may want to increase mp4_max_buffer_size"",
+                          mp4->file.name.data, atom_data_size);
+            return NGX_ERROR;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"            ngx_log_error(NGX_LOG_ERR, mp4->file.log, 0,
+                          ""\""%s\"" mp4 moov atom is too large:%uL, ""
+                          ""you may want to increase mp4_max_buffer_size"",
+                          mp4->file.name.data, atom_data_size);",yes,Inappropriate threshold in P¡úV
+nginx,hls_mp4_buffer_size,"    if (mp4->buffer_size < size) {
+        ngx_log_error(NGX_LOG_ERR, mp4->file.log, 0,
+                      ""\""%s\"" mp4 file truncated"", mp4->file.name.data);
+        return NGX_ERROR;
+    }
+
+    if (mp4->buffer == NULL) {
+        mp4->buffer = ngx_palloc(mp4->request->pool, mp4->buffer_size);
+        if (mp4->buffer == NULL) {
+            return NGX_ERROR;
+        }
+
+        mp4->buffer_start = mp4->buffer;
+    }
+
+    n = ngx_read_file(&mp4->file, mp4->buffer_start, mp4->buffer_size,
+                      mp4->offset);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"        ngx_log_error(NGX_LOG_ERR, mp4->file.log, 0,
+                      ""\""%s\"" mp4 file truncated"", mp4->file.name.data);
+        return NGX_ERROR;",yes,Inappropriate threshold in P¡úV
+nginx,client_max_body_size,"    if (r->headers_in.content_length_n != -1
+        && !r->discard_body
+        && clcf->client_max_body_size
+        && clcf->client_max_body_size < r->headers_in.content_length_n)
+    {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      ""client intended to send too large body: %O bytes"",
+                      r->headers_in.content_length_n);
+
+        r->expect_tested = 1;
+        (void) ngx_http_discard_request_body(r);
+        ngx_http_finalize_request(r, NGX_HTTP_REQUEST_ENTITY_TOO_LARGE);
+        return NGX_OK;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      ""client intended to send too large body: %O bytes"",
+                      r->headers_in.content_length_n);",yes,Inappropriate threshold in P¡úV
+nginx,image_filter_buffer,"    if (len != -1 && len > (off_t) conf->buffer_size) {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      ""image filter: too big response: %O"", len);
+
+        return NGX_HTTP_UNSUPPORTED_MEDIA_TYPE;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      ""image filter: too big response: %O"", len);",yes,Inappropriate threshold in P¡úV
+nginx,http2_max_requests,"    if (h2c->idle++ > 10 * clcf->keepalive_requests) {
+        ngx_log_error(NGX_LOG_INFO, h2c->connection->log, 0,
+                      ""http2 flood detected"");
+        ngx_http_v2_finalize_connection(h2c, NGX_HTTP_V2_NO_ERROR);
+        return;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,"        ngx_log_error(NGX_LOG_INFO, h2c->connection->log, 0,
+                      ""http2 flood detected"");",yes,Inappropriate threshold in P¡úV
+nginx,gzip_min_length,"    if (!conf->enable
+        || (r->headers_out.status != NGX_HTTP_OK
+            && r->headers_out.status != NGX_HTTP_FORBIDDEN
+            && r->headers_out.status != NGX_HTTP_NOT_FOUND)
+        || (r->headers_out.content_encoding
+            && r->headers_out.content_encoding->value.len)
+        || (r->headers_out.content_length_n != -1
+            && r->headers_out.content_length_n < conf->min_length)
+        || ngx_http_test_content_type(r, &conf->types) == NULL
+        || r->header_only)
+    {
+        return ngx_http_next_header_filter(r);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,map_hash_max_size,"    for (size = start; size <= hinit->max_size; size++) {
+
+        ngx_memzero(test, size * sizeof(u_short));
+
+        for (n = 0; n < nelts; n++) {
+            if (names[n].key.data == NULL) {
+                continue;
+            }
+
+            key = names[n].key_hash % size;
+            len = test[key] + NGX_HASH_ELT_SIZE(&names[n]);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,fastcgi_temp_file_write_size,"            if (prev_last_shadow
+                && ((size + bsize > p->temp_file_write_size)
+                    || (p->temp_file->offset + size + bsize
+                        > p->max_temp_file_size)))
+            {
+                break;
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,output_buffers,"        if (bsize >= (off_t) ctx->bufs.size) {
+            return NGX_DECLINED;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,perl_require,"    for (i = 0; i < requires->nelts; i++) {
+
+        require_pv((char *) script[i].data);
+
+        if (SvTRUE(ERRSV)) {
+
+            err = (u_char *) SvPV(ERRSV, len);
+            while (--len && (err[len] == CR || err[len] == LF)) { /* void */ }
+
+            ngx_log_error(NGX_LOG_EMERG, log, 0,
+                          ""require_pv(\""%s\"") failed: \""%*s\"""",
+                          script[i].data, len + 1, err);
+
+            return NGX_ERROR;
+        }
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,proxy_headers_hash_bucket_size,"    if (hinit->max_size > 10000 && nelts && hinit->max_size / nelts < 100) {
+        start = hinit->max_size - 1000;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,proxy_temp_file_write_size,"    if (conf->upstream.temp_file_write_size < size) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+             ""\""proxy_temp_file_write_size\"" must be equal to or greater ""
+             ""than the maximum of the value of \""proxy_buffer_size\"" and ""
+             ""one of the \""proxy_buffers\"""");
+
+        return NGX_CONF_ERROR;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,quic_active_connection_id_limit,if (qc->nclient_ids > qc->tp.active_connection_id_limit) {,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,uwsgi_cache_max_range_offset,"
+    if (offset >= u->conf->cache_max_range_offset) {
+        return NGX_DECLINED;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,gzip_min_length,"    if (!conf->enable
+        || (r->headers_out.status != NGX_HTTP_OK
+            && r->headers_out.status != NGX_HTTP_FORBIDDEN
+            && r->headers_out.status != NGX_HTTP_NOT_FOUND)
+        || (r->headers_out.content_encoding
+            && r->headers_out.content_encoding->value.len)
+        || (r->headers_out.content_length_n != -1
+            && r->headers_out.content_length_n < conf->min_length)
+        || ngx_http_test_content_type(r, &conf->types) == NULL
+        || r->header_only)
+    {
+        return ngx_http_next_header_filter(r);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,gzip_min_length,"    if (!conf->enable
+        || (r->headers_out.status != NGX_HTTP_OK
+            && r->headers_out.status != NGX_HTTP_FORBIDDEN
+            && r->headers_out.status != NGX_HTTP_NOT_FOUND)
+        || (r->headers_out.content_encoding
+            && r->headers_out.content_encoding->value.len)
+        || (r->headers_out.content_length_n != -1
+            && r->headers_out.content_length_n < conf->min_length)
+        || ngx_http_test_content_type(r, &conf->types) == NULL
+        || r->header_only)
+    {
+        return ngx_http_next_header_filter(r);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,proxy_download_rate,"                if (c->type == SOCK_STREAM && (off_t) size > limit) {
+                    size = (size_t) limit;
+                }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,scgi_cache_min_uses,"    if (!(ngx_event_flags & NGX_USE_VNODE_EVENT)
+        || !of->events
+        || file->event
+        || of->fd == NGX_INVALID_FILE
+        || file->uses < of->min_uses)
+    {
+        return;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,keepalive_time,"    if (n + 1 == clcf->keepalive_requests
+        || ngx_current_msec - c->start_time > clcf->keepalive_time)
+    {
+        h3c->goaway = 1;
+
+        if (!h3c->hq) {
+            if (ngx_http_v3_send_goaway(c, h3c->next_request_id) != NGX_OK) {
+                ngx_http_close_connection(c);
+                return;
+            }
+        }
+
+        ngx_http_v3_shutdown_connection(c, NGX_HTTP_V3_ERR_NO_ERROR,
+                                        ""reached maximum number of requests"");
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+nginx,limit_req_log_level,"    if (log->log_level >= level) {
+        va_start(args, fmt);
+        ngx_log_error_core(level, log, err, fmt, args);
+        va_end(args);
+    }",P¡úV,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,XLogArchiveTimeout,"	if ((int) (now - last_xlog_switch_time) >= XLogArchiveTimeout)
+	{",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,"				elog(DEBUG1, ""write-ahead log switch forced (archive_timeout=%d)"",
+					 XLogArchiveTimeout);",yes,Inappropriate threshold in P¡úV
+postgresql,DeadlockTimeout,return (diff >= msec * INT64CONST(1000));,P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+postgresql,wal_receiver_status_interval,return (diff >= msec * INT64CONST(1000));,P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,yes,Inappropriate threshold in P¡úV
+postgresql,checkpoint_flush_after,"	if (wb_context->nr_pending >= *wb_context->max_pending)
+		IssuePendingWritebacks(wb_context, io_context);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,effective_cache_size,"		if (subtreesize > effective_cache_size / 4)
+			break;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,effective_io_concurrency,"		for (int i = 0; i < prefetch_maximum; i++)
+		{
+			BlockNumber prefetch_block;
+
+			if (!BlockSampler_HasMore(&prefetch_bs))
+				break;
+
+			prefetch_block = BlockSampler_Next(&prefetch_bs);
+			PrefetchBuffer(scan->rs_rd, MAIN_FORKNUM, prefetch_block);
+		}",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,from_collapse_limit,"			if (sub_members <= 1 ||
+				list_length(joinlist) + sub_members + remaining <= from_collapse_limit)
+				joinlist = list_concat(joinlist, sub_joinlist);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,Log_RotationSize,"			if (ftell(syslogFile) >= Log_RotationSize * 1024L ||
+				(csvlogFile != NULL && ftell(csvlogFile) >= Log_RotationSize * 1024L) ||
+				(jsonlogFile != NULL && ftell(jsonlogFile) >= Log_RotationSize * 1024L))
+				SetLatch(MyLatch);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,log_temp_files,"		if ((size / 1024) >= log_temp_files)
+			ereport(LOG,
+					(errmsg(""temporary file: path \""%s\"", size %lu"",
+							path, (unsigned long) size)));",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,max_files_per_process,"		if (used >= max_to_probe)
+			break;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,max_parallel_apply_workers_per_subscription,"	if (is_parallel_apply_worker &&
+		nparallelapplyworkers >= max_parallel_apply_workers_per_subscription)
+	{
+		LWLockRelease(LogicalRepWorkerLock);
+		return false;
+	}",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,max_stack_depth,"	if (stack_depth > max_stack_depth_bytes &&
+		stack_base_ptr != NULL)
+		return true;",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,max_wal_senders,for (i = 0; i < max_wal_senders; i++),P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,max_worker_processes,"	if (++numworkers > max_worker_processes)
+	{
+		ereport(LOG,
+				(errcode(ERRCODE_CONFIGURATION_LIMIT_EXCEEDED),
+				 errmsg(""too many background workers""),
+				 errdetail_plural(""Up to %d background worker can be registered with the current settings."",
+								  ""Up to %d background workers can be registered with the current settings."",
+								  max_worker_processes,
+								  max_worker_processes),
+				 errhint(""Consider increasing the configuration parameter \""max_worker_processes\""."")));
+		return;
+	}",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,MaxConnections,"	if (SuperuserReservedConnections + ReservedConnections >= MaxConnections)
+	{
+		write_stderr(""%s: superuser_reserved_connections (%d) plus reserved_connections (%d) must be less than max_connections (%d)\n"",
+					 progname,
+					 SuperuserReservedConnections, ReservedConnections,
+					 MaxConnections);
+		ExitPostmaster(1);
+	}",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+postgresql,wal_keep_size_mb,"		if (currSegNo - segno < keep_segs)
+		{
+			/* avoid underflow, don't go below 1 */
+			if (currSegNo <= keep_segs)
+				segno = 1;
+			else
+				segno = currSegNo - keep_segs;
+		}",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,yes,Inappropriate threshold in P¡úV
+yarn,FEDERATION_AMRMPROXY_REGISTER_UAM_RETRY_COUNT,"        if (++retry > retryCount) {
+          LOG.info(""Maxed out Federation retries. Giving up!"");
+          throw e;
+        }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,runtime error,"LOG.info(""Maxed out Federation retries. Giving up!"");",no,Inappropriate threshold in P¡úV
+yarn,FEDERATION_STATESTORE_CLEANUP_RETRY_COUNT,"        if (++retry > retryCount) {
+          LOG.info(""Maxed out Federation retries. Giving up!"");
+          throw e;
+        }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,runtime error,"LOG.info(""Maxed out Federation retries. Giving up!"");",no,Inappropriate threshold in P¡úV
+yarn,FS_RM_STATE_STORE_NUM_RETRIES,"          if (++retry > fsNumRetries) {
+            LOG.info(""Maxed out FS retries. Giving up!"");
+            throw e;
+          }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,runtime error,"LOG.info(""Maxed out FS retries. Giving up!"");",no,Inappropriate threshold in P¡úV
+yarn,SHARED_CACHE_NESTED_LEVEL,"   if (cacheDepth <= 0) {
+      LOG.warn(""Specified cache depth was less than or equal to zero.""
+          + "" Using default value instead. Default: {}, Specified: {}"",
+          YarnConfiguration.DEFAULT_SHARED_CACHE_NESTED_LEVEL, cacheDepth);
+      cacheDepth = YarnConfiguration.DEFAULT_SHARED_CACHE_NESTED_LEVEL;
+    }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,unexpected results,"LOG.warn(""Specified cache depth was less than or equal to zero.""
+          + "" Using default value instead. Default: {}, Specified: {}"",
+          YarnConfiguration.DEFAULT_SHARED_CACHE_NESTED_LEVEL, cacheDepth);",no,Inappropriate threshold in P¡úV
+yarn,RM_DT_RENEWER_THREAD_RETRY_MAX_ATTEMPTS,"            if (evt.getAttempt() < tokenRenewerThreadRetryMaxAttempts) {
+              renewalTimer.schedule(
+                  getTimerTask((AbstractDelegationTokenRenewerAppEvent) evt),
+                  tokenRenewerThreadRetryInterval);
+            } else {
+              LOG.info(
+                  ""Exhausted max retry attempts {} in token renewer ""
+                      + ""thread for {}"",
+                  tokenRenewerThreadRetryMaxAttempts, evt.getApplicationId());
+            }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,"              LOG.info(
+                  ""Exhausted max retry attempts {} in token renewer ""
+                      + ""thread for {}"",
+                  tokenRenewerThreadRetryMaxAttempts, evt.getApplicationId());",no,Inappropriate threshold in P¡úV
+yarn,AM_SCHEDULING_NODE_BLACKLISTING_ENABLED,"    if (currentBlacklistSize < failureThreshold) {
+      LOG.debug(""blacklist size {} is less than failure threshold ratio {}""
+          + "" out of total usable nodes {}"", currentBlacklistSize,
+          blacklistDisableFailureThreshold, numberOfNodeManagerHosts);
+      ret = ResourceBlacklistRequest.newInstance(blacklist, EMPTY_LIST);
+    }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,"      LOG.debug(""blacklist size {} is less than failure threshold ratio {}""
+          + "" out of total usable nodes {}"", currentBlacklistSize,
+          blacklistDisableFailureThreshold, numberOfNodeManagerHosts);",no,Inappropriate threshold in P¡úV
+yarn,LOAD_BASED_SC_SELECTOR_THRESHOLD,"      if (targetPendingCount == -1 || targetPendingCount < maxThreshold) {
+        return targetId;
+      }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+yarn,RM_AM_MAX_ATTEMPTS,"            if (appAttempt.rmApp.getMaxAppAttempts() > 1
+                && numberOfFailure < appAttempt.rmApp.getMaxAppAttempts()) {
+              keepContainersAcrossAppAttempts = true;
+            }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+yarn,TIMELINE_SERVICE_CLIENT_MAX_RETRIES,"    while (retries > 0) {
+      TimelineHealth timelineHealth = writer.getHealthStatus();
+      if (timelineHealth.getHealthStatus().equals(
+              TimelineHealth.TimelineHealthStatus.RUNNING)) {
+        return true;
+      } else {
+        try {
+          Thread.sleep(writeRetryInterval);
+        } catch (InterruptedException ex) {
+          Thread.currentThread().interrupt();
+          throw ex;
+        }
+        retries--;
+      }
+    }",P¡úV,Reliability,Fault Tolerance,Retry Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+yarn,IN_MEMORY_STALENESS_PERIOD_MINS,"    if (accessTime == -1) {
+      // check modification time
+      long modTime = file.getModificationTime();
+      // if modification time is older then the store startup time, we need to
+      // just use the store startup time as the last point of certainty
+      long lastUse = modTime < this.startTime ? this.startTime : modTime;
+      return lastUse < staleTime;
+    } else {
+      // check access time
+      return accessTime < staleTime;
+    }",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+yarn,TIMELINE_SERVICE_CLIENT_INTERNAL_TIMERS_TTL_SECS,"      if (Time.monotonicNow() - this.timeStampOfLastWrite
+          >= this.timerTaskRetainTTL) {",P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+yarn,TIMELINE_SERVICE_LEVELDB_WRITE_BATCH_SIZE,"          if (batchSize >= writeBatchSize) {
+            LOG.debug(""Preparing to delete a batch of {} old start times"",
+                batchSize);
+            starttimedb.write(writeBatch);
+            LOG.debug(""Deleted batch of {}. Total start times deleted""
+                + "" so far this cycle: {}"", batchSize, startTimesCount);
+            IOUtils.cleanupWithLogger(LOG, writeBatch);
+            writeBatch = starttimedb.createWriteBatch();
+            batchSize = 0;
+          }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"            LOG.debug(""Preparing to delete a batch of {} old start times"",
+                batchSize);
+            starttimedb.write(writeBatch);
+            LOG.debug(""Deleted batch of {}. Total start times deleted""
+                + "" so far this cycle: {}"", batchSize, startTimesCount);",no,Inappropriate threshold in P¡úV
+yarn,DistributedOpportunisticContainerAllocator,"          remAllocs =
+              maxAllocationsPerAMHeartbeat - allocatedContainers.size()
+                  - getTotalAllocations(allocations);
+          if (remAllocs <= 0) {",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"            LOG.info(""Not allocating more containers as we have reached max ""
+                    + ""allocations per AM heartbeat {}"",
+                maxAllocationsPerAMHeartbeat);",no,Inappropriate threshold in P¡úV
+yarn,RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,"    if (capability.getMemorySize() < minAllocMb
+        || capability.getVirtualCores() < minAllocVcores) {
+      String message = ""NodeManager from  "" + host
+          + "" doesn't satisfy minimum allocations, Sending SHUTDOWN""
+          + "" signal to the NodeManager. Node capabilities are "" + capability
+          + ""; minimums are "" + minAllocMb + ""mb and "" + minAllocVcores
+          + "" vcores"";
+      LOG.info(message);
+      response.setDiagnosticsMessage(message);
+      response.setNodeAction(NodeAction.SHUTDOWN);
+      return response;
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,"      String message = ""NodeManager from  "" + host
+          + "" doesn't satisfy minimum allocations, Sending SHUTDOWN""
+          + "" signal to the NodeManager. Node capabilities are "" + capability
+          + ""; minimums are "" + minAllocMb + ""mb and "" + minAllocVcores
+          + "" vcores"";
+      LOG.info(message);",no,Inappropriate threshold in P¡úV
+yarn,LOG_AGGREGATION_DEBUG_FILESIZE,"                  if (fileSize >= logFileSizeThreshold) {
+                    LOG.debug(""Log File "" + uploadedFilePath + "" size is "" + fileSize + "" bytes"");
+                  }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"LOG.debug(""Log File "" + uploadedFilePath + "" size is "" + fileSize + "" bytes"");",no,Inappropriate threshold in P¡úV
+yarn,NM_LOG_DELETE_THRESHOLD,"            if (appLogSize >= deleteThreshold) {
+              LOG.info(""Log Deletion for application: {}, with no delay, size={}"", appId, appLogSize);
+              sched.schedule(logDeleter, 0, TimeUnit.SECONDS);
+              logDeleterStarted = true;
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,"LOG.info(""Log Deletion for application: {}, with no delay, size={}"", appId, appLogSize);",no,Inappropriate threshold in P¡úV
+yarn,FEDERATION_STATESTORE_MAX_APPLICATIONS,"      while (rs.next() && appsHomeSubClusters.size() <= maxAppsInStateStore) {
+
+        // Extract the output for each tuple
+        String applicationId = rs.getString(""applicationId"");
+        String homeSubCluster = rs.getString(""homeSubCluster"");
+
+        appsHomeSubClusters.add(ApplicationHomeSubCluster.newInstance(
+            ApplicationId.fromString(applicationId),
+            SubClusterId.newInstance(homeSubCluster)));
+      }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+yarn,NM_OPPORTUNISTIC_CONTAINERS_MAX_QUEUE_LENGTH,"        } else {
+          isQueued =
+              queuedOpportunisticContainers.size() < maxOppQueueLength;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+yarn,NUMBER_OF_ASYNC_ENTITIES_TO_MERGE,"              if (count == numberOfAsyncsToMerge) {
+                // Flush the entities if the number of the async
+                // putEntities merged reaches the desired limit. To avoid
+                // collecting multiple entities and delaying for a long
+                // time.
+                entitiesHolder.run();
+                break;
+              }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+yarn,RM_MAX_LOG_AGGREGATION_DIAGNOSTICS_IN_MEMORY,"          if (diagnostics.size()
+              == maxLogAggregationDiagnosticsInMemory) {
+            diagnostics.remove(0);
+          }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+yarn,SHARED_CACHE_NESTED_LEVEL,"    for (int i = 0; i < cacheDepth; i++) {
+      sb.append(Path.SEPARATOR_CHAR)
+          .append(checksum.charAt(i));
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+yarn,NM_LOCALIZER_CACHE_TARGET_SIZE_MB,"    for (Iterator<Map.Entry<LocalizedResource, LocalResourcesTracker>> i =
+        resourceMap.entrySet().iterator();
+        currentSize - stats.totalDelSize > targetSize && i.hasNext();) {
+      Map.Entry<LocalizedResource, LocalResourcesTracker> rsrc = i.next();
+      LocalizedResource resource = rsrc.getKey();
+      LocalResourcesTracker tracker = rsrc.getValue();
+      if (tracker.remove(resource, delService)) {
+        stats.incDelSize(tracker.getUser(), resource.getSize());
+      }
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,/,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+yarn,NM_CLIENT_MAX_NM_PROXIES,"    while (cmProxy.size() >= maxConnectedNMs) {
+      LOG.debug(""Cleaning up the proxy cache, size={} max={}"", cmProxy.size(),
+          maxConnectedNMs);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,unexpected results,"      LOG.debug(""Cleaning up the proxy cache, size={} max={}"", cmProxy.size(),
+          maxConnectedNMs);",no,Inappropriate threshold in P¡úV
+yarn,NM_CONTAINER_DIAGNOSTICS_MAXIMUM_SIZE,"    if (diagnostics.length() > diagnosticsMaxSize) {
+      diagnostics.delete(0, diagnostics.length() - diagnosticsMaxSize);
+    }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,unexpected results,/,no,Inappropriate threshold in P¡úV
+yarn,ROUTER_CLIENTRM_SUBMIT_RETRY,"        if (++retry > retryCount) {
+          LOG.info(""Maxed out Federation retries. Giving up!"");
+          throw e;
+        }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,"         LOG.info(""Maxed out Federation retries. Giving up!"");
+          throw e;",no,Inappropriate threshold in P¡úV
+yarn,ROUTER_ASC_INTERCEPTOR_MAX_SIZE,"      if (bytesOfSerializedSize >= bytesOfMaxAscSize) {
+        logContainerLaunchContext(appContext);
+        String applicationId = appContext.getApplicationId().toString();
+        String limit = StringUtils.byteDesc((long) bytesOfMaxAscSize);
+        String appContentSize = StringUtils.byteDesc(bytesOfSerializedSize);
+        String errMsg = String.format(
+            ""The size of the ApplicationSubmissionContext of the application %s is "" +
+            ""above the limit %s, size = %s."", applicationId, limit, appContentSize);
+        LOG.error(errMsg);
+        throw new YarnException(errMsg);
+      }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,"        String errMsg = String.format(
+            ""The size of the ApplicationSubmissionContext of the application %s is "" +
+            ""above the limit %s, size = %s."", applicationId, limit, appContentSize);
+        LOG.error(errMsg);",no,Inappropriate threshold in P¡úV
+yarn,RM_ZK_ZNODE_SIZE_LIMIT_BYTES,"    if (appStateData.length <= zknodeLimit) {
+      zkManager.safeCreate(nodeCreatePath, appStateData, zkAcl,
+          CreateMode.PERSISTENT, zkAcl, fencingNodePath);
+    } else {
+      LOG.debug(""Application state data size for {} is {}"",
+          appId, appStateData.length);
+
+      throw new StoreLimitException(""Application "" + appId
+          + "" exceeds the maximum allowed size for application data. ""
+          + ""See yarn.resourcemanager.zk-max-znode-size.bytes."");
+    }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,"      LOG.debug(""Application state data size for {} is {}"",
+          appId, appStateData.length);",no,Inappropriate threshold in P¡úV
+yarn,NODE_STORE_ROOT_DIR_NUM_RETRIES,"        if (retryCount > maxRetries) {
+          throw e;
+        }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+yarn,RM_APPLICATION_MAX_TAG_LENGTH,"      if (tag.length() > appMaxTagLength) {
+        throw RPCUtil.getRemoteException(
+            new IllegalArgumentException(""Tag "" + tag + "" is too long, ""
+                + ""maximum allowed length of a tag is "" + appMaxTagLength));
+      }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+yarn,RM_DELEGATION_TOKEN_MAX_CONF_SIZE,"      if (tokenConf.capacity() > maxSize) {
+        throw new YarnException(
+            ""Exceed "" + YarnConfiguration.RM_DELEGATION_TOKEN_MAX_CONF_SIZE
+                + "" = "" + maxSize + "" bytes, current conf size = ""
+                + tokenConf.capacity() + "" bytes."");
+      }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.leader.maxTimeToWaitForEpoch,if (Time.currentElapsedTime() - timeStartWaitForEpoch > maxTimeToWaitForEpoch) {,P¡úV,Reliability,Fault Tolerance,Timeout Limitation,/,/,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.bitHashCacheSize,"        if (cache.size() < cacheSize) {
+            cache.add(elementBit);
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.maxBatchSize,return (maxBatchSize > 0) && (toFlush.size() >= maxBatchSize);,P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.request_throttle_max_requests,"                        if (zks.getInProcess() < maxRequests) {
+                            break;
+                        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.commitProcessor.maxReadBatchSize,"                while (!stopped
+                       && requestsToProcess > 0
+                       && (maxReadBatchSize < 0 || readsProcessed <= maxReadBatchSize)",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.globalOutstandingLimit,"        if (globalOutstandingLimit < getInflight() || globalOutstandingLimit < getInProcess()) {
+            return outStandingCount > 0;
+        }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,Performance Degradation,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.commitLogCount,"            if (committedLog.size() > commitLogCount) {
+                committedLog.remove();
+                minCommittedLog = committedLog.peek().packet.getZxid();
+            }",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,unexpected results,"            if (committedLog.size() > commitLogCount) {
+                committedLog.remove();
+                minCommittedLog = committedLog.peek().packet.getZxid();
+            }",no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.fastleader.minNotificationInterval,"notTimeout = Math.min(notTimeout << 1, maxNotificationInterval);",P¡úV,Performance,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,unexpected results,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.leader.maxConcurrentSnapSyncs,"            if (essential || syncInProgress < maxConcurrentSyncs) {
+                syncInProgress++;
+            } else {
+                throw new SyncThrottleException(syncInProgress + 1, maxConcurrentSyncs, syncType);
+            }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV
+zookeeper,zookeeper.watcherCleanThreadsNum,"        while (maxInProcessingDeadWatchers > 0 && !stopped && totalDeadWatchers.get() >= maxInProcessingDeadWatchers) {
+            try {
+                RATE_LOGGER.rateLimitLog(""Waiting for dead watchers cleaning"");
+                long startTime = Time.currentElapsedTime();
+                synchronized (processingCompletedEvent) {
+                    processingCompletedEvent.wait(100);
+                }
+                long latency = Time.currentElapsedTime() - startTime;
+                ServerMetrics.getMetrics().ADD_DEAD_WATCHER_STALL_TIME.add(latency);
+            } catch (InterruptedException e) {
+                LOG.info(""Got interrupted while waiting for dead watches queue size"");
+                break;
+            }
+        }",P¡úV,Reliability,Workload Adaption,Resource Limitation,Prevent excessive resource utilization,runtime error,/,no,Inappropriate threshold in P¡úV

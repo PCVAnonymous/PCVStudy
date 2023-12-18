@@ -1,0 +1,92 @@
+Software,Parameter,Code Snippet,Code Pattern,Overall Impact,Effect on Software Behavior,How to Control Software Behavior,Special Effect on Software,Bad consequences,Log Information,On-the-fly Update,"The ""Crisis"" Behind Specific Interactions"
+hdfs,dfs.namenode.checkpoint.period,long checkpointPeriodMSec = checkpointConf.getPeriod() * 1000;,P-C,Functionality and Others,/,/,/,/,/,no,/
+httpd,io_buffer_size,"maxsize = APR_ALIGN(maxsize, 1024);",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+httpd,ExpiresActive,"    if (conf->active != ACTIVE_ON ||
+        (apr_is_empty_table(conf->expiresbytype) && !conf->expiresdefault)) {
+        return;
+    }",P-C,Functionality and Others,/,/,/,/,/,yes,/
+httpd,bufbytes,"        dbufsize = conf->bufbytes;
+        dbuf = apr_palloc(r->pool, dbufsize + 1);",P-C,Functionality and Others,/,/,/,/,/,yes,/
+httpd,RewriteOptions,"    if (dconf->options & OPTION_LONGOPT) { 
+        apr_pool_create(&(ctx->temp_pool), r->pool);
+        apr_pool_tag(ctx->temp_pool, ""rewrite_ctx_ptemp"");
+    }",P-C,Functionality and Others,/,/,/,/,/,yes,/
+mysql,binlog_cache_size,"      if ((my_off_t)cachesize > end_of_file - seek_offset + IO_SIZE * 2 - 1) {
+        cachesize = (size_t)(end_of_file - seek_offset) + IO_SIZE * 2 - 1;
+        use_async_io = false; /* No need to use async */
+      }",P-C,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,yes,/
+mysql,innodb_page_size,const auto min_io_size = (srv_page_size / 2) + IO_BLOCK_SIZE;,P-C,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,no,/
+mysql,max_sort_length,const uint max_sort_length_even = (thd->variables.max_sort_length + 1) & ~1;,P-C,Functionality and Others,/,/,/,unexpected results,/,yes,/
+mysql,clone_max_io_bandwidth,    max_io *= 0.9;,P-C,Functionality and Others,/,/,/,unexpected results,/,yes,/
+mysql,innodb_buffer_pool_chunk_size,"  /* Round down to a multiple of page size,
+  although it already should be. */
+  mem_size = ut_2pow_round(mem_size, UNIV_PAGE_SIZE);
+  /* Reserve space for the block descriptors. */
+  mem_size += ut_2pow_round(
+      (mem_size / UNIV_PAGE_SIZE) * (sizeof *block) + (UNIV_PAGE_SIZE - 1),
+      UNIV_PAGE_SIZE);",P-C,Functionality and Others,/,/,/,/,/,no,/
+mysql,clone_buffer_size,"uchar *Client::get_aligned_buffer(uint32_t len) {
+  auto err = m_copy_buff.allocate(len + CLONE_OS_ALIGN);
+
+  if (err != 0) {
+    return (nullptr);
+  }
+
+  /* Align buffer to CLONE_OS_ALIGN[4K] for O_DIRECT */
+  auto buf_ptr = clone_os_align(m_copy_buff.m_buffer);
+
+  return (buf_ptr);
+}",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+mysql,key_buffer_size,"  blocks =
+      (ulong)(use_mem / (sizeof(BLOCK_LINK) + 2 * sizeof(HASH_LINK) +
+                         sizeof(HASH_LINK *) * 5 / 4 + key_cache_block_size));",P-C,Functionality and Others,/,/,/,/,/,yes,/
+mysql,key_cache_block_size,"      if ((keycache->block_mem = static_cast<uchar *>(my_malloc(
+               key_memory_KEY_CACHE,
+               (size_t)blocks * keycache->key_cache_block_size, MYF(0))))) {",P-C,Functionality and Others,/,/,/,/,/,yes,/
+mysql,binlog_row_image,"  if (this->m_thd->variables.binlog_row_image == BINLOG_ROW_IMAGE_FULL) {
+    for (auto tpl : extra_privileges) {
+      std::tie(priv, table, std::ignore) = tpl;
+      if (this->m_current->is_table_blocked(priv, table)) return false;
+    }
+  }",P-C,Functionality and Others,/,/,/,/,/,yes,/
+nginx,map_hash_bucket_size,"        mcf->hash_bucket_size = ngx_align(mcf->hash_bucket_size,
+                                          ngx_cacheline_size);",P-C,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,yes,/
+nginx,directio_alignment,size = (size_t) (in->file_pos - (in->file_pos & ~(ctx->alignment - 1)));,P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+nginx,google_perftools_profiles,"profile = ngx_alloc(gptcf->profiles.len + NGX_INT_T_LEN + 2, cycle->log);",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+nginx,quic_active_connection_id_limit,"    len += ngx_quic_tp_len(NGX_QUIC_TP_ACTIVE_CONNECTION_ID_LIMIT,
+                           tp->active_connection_id_limit);",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+nginx,referer_hash_bucket_size,"    conf->referer_hash_bucket_size = ngx_align(conf->referer_hash_bucket_size,
+                                               ngx_cacheline_size);",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+nginx,server_names_hash_bucket_size,"    cmcf->server_names_hash_bucket_size =
+            ngx_align(cmcf->server_names_hash_bucket_size, ngx_cacheline_size);",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+nginx,gzip_comp_level,"        if (conf->level == 1) {
+            wbits = ngx_max(wbits, 13);
+        }",P-C,Functionality and Others,/,/,/,/,/,yes,/
+nginx,gzip_static,"    if (gzcf->enable == NGX_HTTP_GZIP_STATIC_ON) {
+        rc = ngx_http_gzip_ok(r);
+
+    } else {
+        /* always */
+        rc = NGX_OK;
+    }",P-C,Functionality and Others,/,/,/,/,/,yes,/
+nginx,proxy_pass_error_message,"    if (pcf->pass_error_message == 0) {
+        *(b->last - 2) = '\0';
+        ngx_log_error(NGX_LOG_ERR, s->connection->log, 0,
+                      ""upstream sent invalid response: \""%s\"""", p);
+        return NGX_ERROR;
+    }",P-C,Functionality and Others,/,/,/,/,/,yes,/
+nginx,satisfy,"        if (clcf->satisfy == NGX_HTTP_SATISFY_ALL) {
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                          ""access forbidden by rule"");
+        }",P-C,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,Nbuffers,"	/* Align buffer pool on IO page size boundary. */
+	BufferBlocks = (char *)
+		TYPEALIGN(PG_IO_ALIGN_SIZE,
+				  ShmemInitStruct(""Buffer Blocks"",
+								  NBuffers * (Size) BLCKSZ + PG_IO_ALIGN_SIZE,
+								  &foundBufs));",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+postgresql,XLOGbuffers,"size = add_size(size, mul_size(XLOG_BLCKSZ, XLOGbuffers));",P-C,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+postgresql,min_dynamic_shared_memory,"dsm_estimate_size(void)
+{
+	return 1024 * 1024 * (size_t) min_dynamic_shared_memory;
+}",P-C,Functionality and Others,/,/,/,/,/,yes,/

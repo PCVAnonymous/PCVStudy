@@ -1,0 +1,22 @@
+Parameters,Pattern,On-the-fly Update
+zookeeper.audit.enable,p,no
+zookeeper.commitProcessor.numWorkerThreads,p,no
+zookeeper.enableEagerACLCheck,p,no
+zookeeper.learner.asyncSending,p,no
+zookeeper.commitProcessor.maxCommitBatchSize,p&c,no
+zookeeper.connection_throttle_drop_increase,p&c,no
+zookeeper.connection_throttle_global_session_weight,p&c,no
+zookeeper.fastleader.minNotificationInterval,p&c,no
+zookeeper.commitLogCount,p&c&v,no
+zookeeper.commitProcessor.maxReadBatchSize,p&c&v,no
+zookeeper.leader.maxConcurrentSnapSyncs,p&c&v,no
+zookeeper.maxBatchSize,p&c&v,no
+zookeeper.request_throttle_max_requests,p&c&v,no
+zookeeper.watcherCleanIntervalInSeconds,p&c&v,no
+zookeeper.watcherCleanThreadsNum,p&c&v,no
+zookeeper.bitHashCacheSize,p&v,no
+zookeeper.globalOutstandingLimit,p&v,no
+zookeeper.leader.maxTimeToWaitForEpoch,p&v,no
+zookeeper.nio.numSelectorThreads,p&v,no
+zookeeper.nio.numWorkerThreads,p&v,no
+zookeeper.messageTracker.BufferSize,p,no

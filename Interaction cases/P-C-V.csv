@@ -1,0 +1,52 @@
+Software,Parameter,Code Snippet,Code Pattern,Overall Impact,Effect on Software Behavior,How to Control Software Behavior,Special Effect on Software,Bad consequences,Log Information,On-the-fly Update,"The ""Crisis"" Behind Specific Interactions"
+hive,hive.metastore.aggregate.stats.cache.fpp,"  static int optimalNumOfHashFunctions(long n, long m) {
+    return Math.max(1, (int) Math.round((double) m / n * Math.log(2)));
+  }",P-C-V,Functionality and Others,no,/,/,/,/,/,/
+httpd,http_cl_head_zero,"        if (!((r->header_only || AP_STATUS_IS_HEADER_ONLY(r->status))
+              && !r->bytes_sent
+              && (r->sent_bodyct
+                  || conf->http_cl_head_zero != AP_HTTP_CL_HEAD_ZERO_ENABLE
+                  || apr_table_get(r->headers_out, ""Content-Length"")))) {
+            ap_set_content_length(r, r->bytes_sent);
+        }",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+mysql,binlog_row_image,"  if (table->s->primary_key < MAX_KEY &&
+      (thd->variables.binlog_row_image < BINLOG_ROW_IMAGE_FULL) &&
+      !ha_check_storage_engine_flag(table->s->db_type(),
+                                    HTON_NO_BINLOG_ROW_OPT)) {",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+mysql,replica_allow_batching,"  if ((thd->variables.option_bits & OPTION_ALLOW_BATCH) ||
+      (thd->slave_thread && opt_replica_allow_batching))
+    return 1;",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+mysql,innodb_doublewrite_files,"  if (Double_write::s_n_instances < dblwr::n_files) {
+    segments_per_file = 1;
+    Double_write::s_files.resize(Double_write::s_n_instances);
+  } else {
+    Double_write::s_files.resize(dblwr::n_files);
+    segments_per_file = (Double_write::s_n_instances / dblwr::n_files) + 1;
+  }",P-C-V,Functionality and Others,no,/,/,/,/,/,/
+nginx,client_header_buffer_size,"        c->buffer = ngx_create_temp_buf(c->pool, ls->post_accept_buffer_size
+                                                 + 2 * (ls->socklen + 16));",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+nginx,grpc_ignore_headers,"    if (u->headers_in.x_accel_redirect
+        && !(u->conf->ignore_headers & NGX_HTTP_UPSTREAM_IGN_XA_REDIRECT))
+    {
+        ngx_http_upstream_finalize_request(r, u, NGX_DECLINED);",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+nginx,keepalive_disable,"        } else if (r->headers_in.safari
+                   && (clcf->keepalive_disable
+                       & NGX_HTTP_KEEPALIVE_DISABLE_SAFARI))
+        {
+            /*
+             * Safari may send a POST request to a closed keepalive
+             * connection and may stall for some time, see
+             *     https://bugs.webkit.org/show_bug.cgi?id=5760
+             */
+            r->keepalive = 0;
+        }",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+nginx,proxy_cache_background_update,"        if (((u->conf->cache_use_stale & NGX_HTTP_UPSTREAM_FT_UPDATING)
+             || c->stale_updating) && !r->background
+            && u->conf->cache_background_update)",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+nginx,proxy_download_rate,"                limit = (off_t) limit_rate * (ngx_time() - u->start_sec + 1)
+                        - *received;",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+nginx,uwsgi_cache_background_update,"        if (((u->conf->cache_use_stale & NGX_HTTP_UPSTREAM_FT_UPDATING)
+             || c->stale_updating) && !r->background
+            && u->conf->cache_background_update)",P-C-V,Functionality and Others,yes,/,/,/,/,/,/
+zookeeper,zookeeper.watcherCleanIntervalInSeconds,"                        int maxWaitMs = (watcherCleanIntervalInSeconds
+                                         + ThreadLocalRandom.current().nextInt(watcherCleanIntervalInSeconds / 2 + 1)) * 1000;",P-C-V,Functionality and Others,no,/,/,/,/,/,/

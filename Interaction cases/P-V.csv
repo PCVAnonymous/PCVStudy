@@ -1,0 +1,511 @@
+Software,Parameter,Code Snippet,Code Pattern,Overall Impact,Effect on Software Behavior,How to Control Software Behavior,Special Effect on Software,Bad consequences,Log Information,On-the-fly Update,"The ""Crisis"" Behind Specific Interactions"
+hbase,hbase.storescanner.parallel.seek.enable,"    // Parallel seeking is on if the config allows and more there is more than one store file.
+    if (store != null && store.getStorefilesCount() > 1) {
+      RegionServerServices rsService = store.getHRegion().getRegionServerServices();
+      if (rsService != null && scanInfo.isParallelSeekEnabled()) {
+        this.parallelSeekEnabled = true;
+        this.executor = rsService.getExecutorService();
+      }
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hbase,hbase.regionserver.compaction.enabled,if (!useLock && cacheable && cacheConf.shouldLockOnCacheMiss(expectedBlockType)) {,P-V,Functionality and Others,/,/,/,/,/,no,/
+hbase,hbase.server.compactchecker.interval.multiplier,"            long multiplier = s.getCompactionCheckMultiplier();
+            assert multiplier > 0;
+            if (iteration % multiplier != 0) {
+              continue;
+            }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hbase,hbase.region.replica.replication.enabled,"    if (
+      regionReplication <= 1 || !RegionReplicaUtil.isDefaultReplica(regionInfo)
+        || !ServerRegionReplicaUtil.isRegionReplicaReplicationEnabled(conf, regionInfo.getTable())
+        || rss == null
+    ) {
+      regionReplicationSink = Optional.empty();
+      return;
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.namenode.name.dir.restore,"    if(!restoreFailedStorage || removedStorageDirs.size() == 0) {
+      return; //nothing to restore
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,"      LOG.info(""NNStorage.attemptRestoreRemovedStorage: check removed(failed) ""+
+               ""storage. removedStorages size = {}"", removedStorageDirs.size());",no,Optimization is FALSE
+hdfs,DFS_BALANCER_MOVERTHREADS_KEY,int threadsPerTarget = maxMoverThreads/targets.size();,P-V,Functionality and Others,/,/,/,/,"      LOG.warn(DFSConfigKeys.DFS_BALANCER_MOVERTHREADS_KEY + ""="" +
+          maxMoverThreads + "" is too small for moving blocks to "" +
+          targets.size() + "" targets. Balancing may be slower."");",no,/
+hdfs,dfs.namenode.avoid.write.stale.datanode,"  public boolean shouldAvoidStaleDataNodesForWrite() {
+    // If # stale exceeds maximum staleness ratio, disable stale
+    // datanode avoidance on the write path
+    return avoidStaleDataNodesForWrite && numStaleNodes > 0 &&
+        (numStaleNodes <= heartbeatManager.getLiveDatanodeCount()
+            * ratioUseStaleDataNodesForWrite);
+  }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hdfs,dfs.namenode.avoid.read.stale.datanode,"  private boolean isInactive(DatanodeInfo datanode) {
+    return datanode.isDecommissioned() ||
+        datanode.isDecommissionInProgress() ||
+        datanode.isEnteringMaintenance() ||
+        (avoidStaleDataNodesForRead && datanode.isStale(staleInterval));
+  }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hdfs,dfs.namenode.avoid.read.slow.datanode,return avoidSlowDataNodesForRead && slowNodesUuidSet.contains(dnUuid);,P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hdfs,dfs.datanode.drop.cache.behind.reads,"    if (ris.getDataInFd() != null &&
+        ((dropCacheBehindAllReads) ||
+         (dropCacheBehindLargeReads && isLongRead()))) {
+      try {
+        ris.dropCacheBehindReads(block.getBlockName(), lastCacheDropOffset,
+            offset - lastCacheDropOffset, POSIX_FADV_DONTNEED);
+      } catch (Exception e) {
+        LOG.warn(""Unable to drop cache on file close"", e);
+      }
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hdfs,dfs.datanode.drop.cache.behind.writes,"        if (dropPos > 0 && dropCacheBehindWrites) {
+          streams.dropCacheBehindWrites(block.getBlockName(), 0, dropPos,
+              POSIX_FADV_DONTNEED);
+        }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hdfs,dfs.datanode.sync.behind.writes,"      if (streams.getOutFd() != null &&
+          offsetInBlock > lastCacheManagementOffset + CACHE_DROP_LAG_BYTES) {
+        long begin = Time.monotonicNow();
+        //
+        // For SYNC_FILE_RANGE_WRITE, we want to sync from
+        // lastCacheManagementOffset to a position ""two windows ago""
+        //
+        //                         <========= sync ===========>
+        // +-----------------------O--------------------------X
+        // start                  last                      curPos
+        // of file                 
+        //
+        if (syncBehindWrites) {",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hdfs,dfs.image.parallel.load,"if (loadInParallel && (stageSubSections.size() > 0)) {
+            inodeLoader.loadINodeSectionInParallel(executorService,
+                stageSubSections, summary.getCodec(), prog, currentStep);
+          }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hdfs,dfs.client.cache.drop.behind.reads,"        long dropPos = lastCacheManagementOffset - CACHE_DROP_LAG_BYTES;
+        if (dropPos > 0 && dropCacheBehindWrites) {
+          streams.dropCacheBehindWrites(block.getBlockName(), 0, dropPos,
+              POSIX_FADV_DONTNEED);
+        }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is null
+hdfs,dfs.permissions.allow.owner.set.quota,"      if (fsd.isPermissionEnabled() && !pc.isSuperUser() && allowOwner) {
+        try {
+          fsd.checkOwner(pc, iip.getParentINodesInPath());
+        } catch(AccessControlException ace) {
+          throw new AccessControlException(
+              ""Access denied for user "" + pc.getUser() +
+              "". Superuser or owner of parent folder privilege is required"");
+        }
+      }",P-V,Functionality and Others,/,/,/,runtime error,/,no,/
+hdfs,dfs.namenode.posix.acl.inheritance.enabled,"    if (posixAclInheritanceEnabled && modes != null &&
+        modes.getUnmasked() != null) {
+      //
+      // HDFS-6962: POSIX ACL inheritance
+      //
+      child.setPermission(modes.getUnmasked());
+      if (!AclStorage.copyINodeDefaultAcl(child)) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug(""{}: no parent default ACL to inherit"", child);
+        }
+        child.setPermission(modes.getMasked());
+      }
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.permissions.enabled,"    if (isPermissionEnabled && pc != null && isRaw) {
+      switch(dirOp) {
+      case READ_LINK:
+      case READ:
+        break;
+      default:
+        pc.checkSuperuserPrivilege(iip.getPath());
+        break;
+      }
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.namenode.checkpoint.check.quiet-multiplier,"      boolean shouldUpload = receiverEntry.isPrimary() ||
+          secsSinceLastUpload >= checkpointConf.getQuietPeriod();
+      if (shouldUpload) {",P-V,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.namenode.invalidate.work.pct.per.iteration,"    final int nodesToProcess = (int) Math.ceil(numlive
+        * this.blocksInvalidateWorkPct);",P-V,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.namenode.startup.delay.block.deletion.sec,"  long getInvalidationDelay() {
+    return pendingPeriodInMs - (Time.monotonicNow() - startupTime);
+  }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.namenode.write.stale.datanode.ratio,"    return avoidStaleDataNodesForWrite && numStaleNodes > 0 &&
+        (numStaleNodes <= heartbeatManager.getLiveDatanodeCount()
+            * ratioUseStaleDataNodesForWrite);",P-V,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.image.parallel.target.sections,"          inodesPerSubSection = (inodeCount + targetSections - 1) /
+              targetSections;",P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,REPL_BATCH_INCREMENTAL_EVENTS,"      if (eventsDumpMetadata.isEventsBatched() != shouldBatch) {
+        LOG.error(""Failed to resume from previous dump. {} was set to {} in previous dump but currently it's"" +
+                        "" set to {}. Cannot dump events in {} manner because they were {} batched in "" +
+                        ""the previous incomplete run"",
+                HiveConf.ConfVars.REPL_BATCH_INCREMENTAL_EVENTS.varname, eventsDumpMetadata.isEventsBatched(),
+                shouldBatch, shouldBatch ? ""batched"" : ""sequential"", shouldBatch ? ""not"" : """"
+        );
+
+        throw new HiveException(
+                String.format(""Failed to resume from previous dump. %s must be set to %s, but currently it's set to %s"",
+                        HiveConf.ConfVars.REPL_BATCH_INCREMENTAL_EVENTS,
+                        eventsDumpMetadata.isEventsBatched(), shouldBatch)
+        );
+      }",P-V,Functionality and Others,/,/,/,runtime error,"        LOG.error(""Failed to resume from previous dump. {} was set to {} in previous dump but currently it's"" +
+                        "" set to {}. Cannot dump events in {} manner because they were {} batched in "" +
+                        ""the previous incomplete run"",
+                HiveConf.ConfVars.REPL_BATCH_INCREMENTAL_EVENTS.varname, eventsDumpMetadata.isEventsBatched(),
+                shouldBatch, shouldBatch ? ""batched"" : ""sequential"", shouldBatch ? ""not"" : """"
+        );",no,/
+hive,hive.enforce.bucketmapjoin,"    if (!convert && conf.getBoolVar(HiveConf.ConfVars.HIVEENFORCEBUCKETMAPJOIN)) {
+      throw new SemanticException(ErrorMsg.BUCKET_MAPJOIN_NOT_POSSIBLE.getMsg());
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hive,hive.optimize.bucketmapjoin,"    if ((HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEOPTBUCKETMAPJOIN))
+      && !isTezExecEngine) {
+      transformations.add(new BucketMapJoinOptimizer());
+      bucketMapJoinOptimizer = true;
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is FALSE
+hive,hive.stats.correlated.multi.key.joins,"          if (numAttr > 1 && conf.getBoolVar(HiveConf.ConfVars.HIVE_STATS_CORRELATED_MULTI_KEY_JOINS)) {
+            denom = Collections.max(distinctVals);
+            distinctUnmatched = denom - ndvsUnmatched.get(distinctVals.indexOf(denom));
+          }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is TRUE
+hive,hive.metastore.batch.retrieve.max,    int nBatches = nParts / batchSize;,P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,hive.repl.approx.max.load.tasks,"        if (shouldBatch && eventCount++ % maxEventsPerBatch == 0) {
+          eventRootDir = new Path(dumpRoot, String.format(ReplUtils.INC_EVENTS_BATCH, ++batchNo));
+        }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,HIVE_MATERIALIZED_VIEW_REBUILD_INCREMENTAL,"          if (forceMVContentsUpToDate && !tryIncrementalRebuild) {
+            // We will not try partial rewriting for rebuild if incremental rebuild is disabled
+            ignore = true;",P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,HIVE_REPL_FAILOVER_START,"      shouldFailover = hiveConf.getBoolVar(HiveConf.ConfVars.HIVE_REPL_FAILOVER_START)
+              && fs.exists(failoverReadyMarker);",P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,REPL_EXTERNAL_WAREHOUSE_SINGLE_COPY_TASK,"        boolean isSingleTaskForExternalDb =
+            conf.getBoolVar(REPL_EXTERNAL_WAREHOUSE_SINGLE_COPY_TASK) && work.replScope.includeAllTables();",P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,hive.fileformat.check,"    if (TableType.MANAGED_TABLE.equals(ts.tableHandle.getTableType())
+        && conf.getBoolVar(HiveConf.ConfVars.HIVECHECKFILEFORMAT)) {
+      ensureFileFormatsMatch(ts, files, fromURI);
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,hive.map.aggr.hash.percentmemory,long maxMemHashAgg = Math.round(totalMemory * hashAggMem * hashAggMaxThreshold);,P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,hive.optimize.bi.enabled,if (!isMaterializedViewMaintenance() && conf.getBoolVar(ConfVars.HIVE_OPTIMIZE_BI_ENABLED)) {,P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,hive.stats.list.num.entries,result += JavaDataModel.get().arrayList() + (listEntries * elemSize);,P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,hive.txn.nonacid.read.locks,"      if (skipNonAcidReadLock && !AcidUtils.isTransactionalTable(t)) {
+        // skip read-locks for non-transactional tables
+        // read-locks don't protect non-transactional tables data consistency
+        continue;
+      }",P-V,Functionality and Others,/,/,/,/,/,no,/
+hive,hive.vectorized.complex.types.enabled,"    boolean ret = validateDataType(
+        typeName, mode, allowComplex && isVectorizationComplexTypesEnabled, allowVoidProjection);",P-V,Functionality and Others,/,/,/,/,/,no,/
+httpd,domains_frozen,"    if (!pubcert && !reg->domains_frozen) {
+        rv = md_util_pool_vdo(pubcert_load, reg, reg->p, &pubcert, MD_SG_DOMAINS, md, i, NULL);
+        if (APR_STATUS_IS_ENOENT(rv)) {
+            /* We cache it missing with an empty record */
+            pubcert = apr_pcalloc(reg->p, sizeof(*pubcert));
+        }
+        else if (APR_SUCCESS != rv) goto leave;
+        if (p != reg->p) name = apr_pstrdup(reg->p, name);
+        apr_hash_set(reg->certs, name, (apr_ssize_t)strlen(name), pubcert);
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,yes,Optimization is Ture
+httpd,CacheIgnoreCacheControl,"    if (!conf->ignorecachecontrol && cache->control_in.min_fresh) {
+        minfresh = cache->control_in.min_fresh_value;
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,yes,Optimization is Ture
+httpd,"
+ProxyHTMLBufSize","    else while (len > (ctx->avail - ctx->offset))
+        ctx->avail += ctx->cfg->bufsz;",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,allow_lockdiscovery,"    if (conf && conf->allow_lockdiscovery == DAV_ENABLED_OFF)
+        flags |= DAV_PROPDB_DISABLE_LOCKDISCOVERY;",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,allow_relative,"            if (dirconf->allow_relative != ALIAS_FLAG_ON || ret[0] != '/') {
+                if (ret[0] == '/') {
+                    char *orig_target = ret;
+
+                    ret = ap_construct_url(r->pool, ret, r);
+                    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(00673)
+                                  ""incomplete redirection target of '%s' for ""
+                                  ""URI '%s' modified to '%s'"",
+                                  orig_target, r->uri, ret);
+                }
+                if (!ap_is_url(ret)) {
+                    ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(00674)
+                                  ""cannot redirect '%s' to '%s'; ""
+                                  ""target is not a valid absoluteURI or abs_path"",
+                                  r->uri, ret);
+                    return HTTP_INTERNAL_SERVER_ERROR;
+                }
+            }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,AuthFormAuthoritative,"        if (!(conf->authoritative) && auth_result != AUTHT_DENIED) {
+            return DECLINED;
+        }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,AuthFormDisableNoStore,"    if (HTTP_UNAUTHORIZED == rv && !conf->disable_no_store) {
+        apr_table_addn(r->headers_out, ""Cache-Control"", ""no-store"");
+        apr_table_addn(r->err_headers_out, ""Cache-Control"", ""no-store"");
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,AuthFormLoginRequiredLocation,"    if (HTTP_UNAUTHORIZED == rv && conf->loginrequired) {
+        const char *loginrequired = ap_expr_str_exec(r,
+                conf->loginrequired, &err);
+        if (!err) {
+            apr_table_set(r->headers_out, ""Location"", loginrequired);
+            return HTTP_MOVED_TEMPORARILY;
+        }
+        else {
+            ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(02340)
+                          ""Can't evaluate login required expression: %s"", err);
+            return HTTP_INTERNAL_SERVER_ERROR;
+        }
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,CacheDirLength,"    for (i = k = d = 0; d < ndepth; ++d) {
+        memcpy(&val[i], &tmp[k], nlength);
+        k += nlength;
+        val[i + nlength] = '/';
+        i += nlength + 1;
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,CacheLastModifiedFactor,apr_time_t x = (apr_time_t) ((date - lastmod) * dconf->factor);,P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,check_case_only,"    if (s_cfg->globally_disabled == O_DISABLE
+        && apr_table_get(s_cfg->enabled_users, user) == NULL) {
+        return DECLINED;
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,checkhandler,"    if (d->checkhandler == MODDIR_ON && strcmp(r->handler, DIR_MAGIC_TYPE)) {
+        /* Prevent DIR_MAGIC_TYPE from leaking out when someone has taken over */
+        if (!strcmp(r->content_type, DIR_MAGIC_TYPE)) { 
+            r->content_type = NULL;
+        }
+        return DECLINED;
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,cryptosize,"            apr_brigade_write(ctx->bb, NULL, NULL, (const char *) ctx->out,
+                              ctx->conf->size - ctx->remaining);",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,d_is_fnmatch,"                if ((entry_core->d_is_fnmatch
+                   ? apr_fnmatch(entry_core->d, cache->cached, APR_FNM_PATHNAME)
+                   : (strncmp(entry_core->d, cache->cached, len)
+                      || (len > 0
+                          && entry_core->d[len - 1] != '/'
+                          && cache->cached[len] != '/'
+                          && cache->cached[len] != '\0')))) {
+                    continue;
+                }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,flushdelimiter,"                    if (data[i] == c->flushdelimiter) {
+                        p = apr_bucket_flush_create(f->c->bucket_alloc);
+                        APR_BRIGADE_INSERT_TAIL(ctx->bb, p);
+                    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,fout_buf_plain_len,buf_remain = fctx->fout_buf_plain_size - fctx->fout_buf_plain_len;,P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,H2Upgrade,"    if (conn_ctx->is_upgrade && !fctx->did_upgrade_eos) {
+        b = apr_bucket_eos_create(f->c->bucket_alloc);
+        APR_BRIGADE_INSERT_TAIL(fctx->bb, b);
+        fctx->did_upgrade_eos = 1;
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,local_80,"            if  (sa->port == mc->local_80
+                 && (!lr->protocol || !strncmp(""http"", lr->protocol, 4))) {
+                can_http = 1;
+            }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,MDBaseServer,if (NULL == s && mc->manage_base_server) s = base_server;,P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,MDRenewWindow,"    if (ts->norm > 0) {
+        int percent = (int)(((long)apr_time_sec(ts->len)) * 100L 
+                            / ((long)apr_time_sec(ts->norm))); ",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,MDRetryDelay,"job->next_run = apr_time_now() + md_job_delay_on_errors(job, job->error_runs, result->problem);",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,merge_slashes,"            /* Collapse ///// sequences to / */
+            if (merge_slashes && IS_SLASH(path[l])) {
+                do {
+                    l++;
+                } while (IS_SLASH(path[l]));
+                continue;
+            }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,msext_opts,"    if (conf->msext_opts & DAV_MSEXT_OPT_WDV)
+        (void)dav_mswdv_postprocessing(r);",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,must_staple,"    /* In case we do not get the NID for it, we treat this as not set. */
+    int nid = MD_GET_NID(MUST_STAPLE);
+    return ((NID_undef != nid)) && X509_get_ext_by_NID(cert->x509, nid, -1) >= 0;",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,Proxy100Continue,"    if (!req->force10
+        && ((r->expecting_100 && (dconf->forward_100_continue || input_brigade))
+            || PROXY_SHOULD_PING_100_CONTINUE(worker, r))) {
+        /* Tell ap_proxy_create_hdrbrgd() to preserve/add the Expect header */
+        apr_table_setn(r->notes, ""proxy-100-continue"", ""1"");
+        req->do_100_continue = 1;
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+httpd,SSLEngine,"    if (!proxyname || conn->is_ssl) {
+        *url = apr_pstrcat(p, uri->path, uri->query ? ""?"" : """",
+                           uri->query ? uri->query : """",
+                           uri->fragment ? ""#"" : """",
+                           uri->fragment ? uri->fragment : """", NULL);
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+mapreduce,mapreduce.job.ubertask.enable,"    isUber = uberEnabled && smallNumMapTasks && smallNumReduceTasks
+        && smallInput && smallMemory && smallCpu 
+        && notChainJob;
+
+    if (isUber) {
+      LOG.info(""Uberizing job "" + jobId + "": "" + numMapTasks + ""m+""
+          + numReduceTasks + ""r tasks ("" + dataInputLength
+          + "" input bytes) will run sequentially on single node."");",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,"    if (isUber) {
+      LOG.info(""Uberizing job "" + jobId + "": "" + numMapTasks + ""m+""
+          + numReduceTasks + ""r tasks ("" + dataInputLength
+          + "" input bytes) will run sequentially on single node."");",no,Optimization is FALSE
+mapreduce,mapreduce.job.maps,long splitSize = (maxVal - minVal) / numSplits;,P-V,Functionality and Others,/,/,/,unexpected results,/,no,/
+mapreduce,mapreduce.reduce.speculative,"      if ( (shouldMapSpec && (tType == null || tType == TaskType.MAP))
+        || (shouldReduceSpec && (tType == null || tType == TaskType.REDUCE))) {
+        // Speculator IS enabled, direct the event to there.
+        callWithJobClassLoader(conf, new Action<Void>() {
+          public Void call(Configuration conf) {
+            speculator.handle(event);
+            return null;
+          }
+        });",P-V,Functionality and Others,/,/,/,/,/,no,/
+mapreduce,mapreduce.client.libjars.wildcard,"      if (useWildcard && !foundFragment) {
+        // Add the whole directory to the cache using a wild card
+        Path libJarsDirWildcard =
+            jtFs.makeQualified(new Path(libjarsDir, DistributedCache.WILDCARD));
+        Job.addCacheFile(libJarsDirWildcard.toUri(), conf);
+      }",P-V,Functionality and Others,/,/,/,/,/,no,/
+mapreduce,mapreduce.task.io.sort.factor,int mod = (numSegments - 1) % (factor - 1);,P-V,Functionality and Others,/,/,/,/,/,no,/
+mysql,binlog_gtid_simple_recovery,"          if (binlog_gtid_simple_recovery && is_server_starting &&
+              !is_relay_log) {
+            assert(all_gtids->is_empty());
+            assert(lost_gtids->is_empty());
+            goto end;
+          }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,no,Optimization is TRUE
+mysql,binlog_order_commits,"  if ((opt_binlog_order_commits || Clone_handler::need_commit_order()) &&
+      (sync_error == 0 || binlog_error_action != ABORT_SERVER)) {
+    if (change_stage(thd, Commit_stage_manager::COMMIT_STAGE, final_queue,
+                     leave_mutex_before_commit_stage, &LOCK_commit)) {
+      DBUG_PRINT(""return"", (""Thread ID: %u, commit_error: %d"", thd->thread_id(),
+                            thd->commit_error));
+      return finish_commit(thd);
+    }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,yes,Optimization is TRUE
+mysql,join_buffer_size,"      const double buffer_usage = std::min(
+          1.0, estimated_bytes_per_row * right_path->num_output_rows() /
+                   m_thd->variables.join_buff_size);
+      return 1.0 - buffer_usage * buffer_usage;",P-V,Functionality and Others,/,/,/,unexpected results,/,yes,/
+mysql,clone_block_ddl,auto acquire_backup_lock = (is_master && clone_block_ddl);,P-V,Functionality and Others,/,/,/,/,/,yes,/
+mysql,innodb_ddl_buffer_size,const auto io_size = m_max_buffer_size / n_buffers;,P-V,Functionality and Others,/,/,/,/,/,yes,/
+mysql,innodb_extend_and_initialize,"  if (!success || (tbsp_extend_and_initialize && !atomic_write)) {
+    success = os_file_set_size(path, file, 0, sz, true);
+
+    if (success) {
+      /* explicit initialization is needed as same as fil_space_extend(),
+      instead of punch_hole. */
+      dberr_t err =
+          os_file_write_zeros(file, path, page_size.physical(), 0, sz);
+      if (err != DB_SUCCESS) {
+        ib::warn(ER_IB_MSG_320) << ""Error while writing "" << sz << "" zeroes to ""
+                                << path << "" starting at offset "" << 0;
+      }
+    }
+  }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+mysql,super_read_only,"inline bool can_persist_I_S_dynamic_statistics(THD *thd,
+                                               const char *schema_name,
+                                               const char *partition_name) {
+  handlerton *ddse = ha_resolve_by_legacy_type(thd, DB_TYPE_INNODB);
+  if (ddse == nullptr || ddse->is_dict_readonly()) return false;
+
+  return (thd->variables.information_schema_stats_expiry &&
+          !thd->variables.transaction_read_only && !super_read_only &&
+          !thd->in_sub_stmt && !read_only && !partition_name &&
+          !thd->in_multi_stmt_transaction_mode() &&
+          (strcmp(schema_name, ""performance_schema"") != 0));
+}",P-V,Functionality and Others,/,/,/,/,/,yes,/
+mysql,innodb_buffer_pool_dump_pct,"      n_pages = n_pages * srv_buf_pool_dump_pct / 100;
+
+      if (n_pages == 0) {
+        n_pages = 1;
+      }
+    }
+
+    dump = static_cast<buf_dump_t *>(
+        ut::malloc_withkey(UT_NEW_THIS_FILE_PSI_KEY, n_pages * sizeof(*dump)));",P-V,Functionality and Others,/,/,/,/,/,yes,/
+mysql,innodb_change_buffer_max_size,"  ulint new_size =
+      ((buf_pool_get_curr_size() / UNIV_PAGE_SIZE) * new_val) / 100;",P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,read_ahead,"        if (of->read_ahead && ngx_file_size(&fi) > NGX_MIN_READ_AHEAD) {
+            if (ngx_read_ahead(fd, of->read_ahead) == NGX_ERROR) {
+                ngx_log_error(NGX_LOG_ALERT, log, ngx_errno,
+                              ngx_read_ahead_n "" \""%V\"" failed"", name);
+            }
+        }",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,yes,Optimization is FALSE
+nginx,client_body_buffer_size,size += preread;,P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,proxy_ssl_crl,"    if (!hc->ssl && (h2scf->enable || hc->addr_conf->http2)) {
+
+        size = ngx_min(sizeof(NGX_HTTP_V2_PREFACE) - 1,
+                       (size_t) (b->last - b->pos));
+
+        if (ngx_memcmp(b->pos, NGX_HTTP_V2_PREFACE, size) == 0) {
+
+            if (size == sizeof(NGX_HTTP_V2_PREFACE) - 1) {
+                ngx_http_v2_init(rev);
+                return;
+            }
+
+            ngx_post_event(rev, &ngx_posted_events);
+            return;
+        }
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,image_filter_transparency,"    if (colors && conf->transparency) {
+        transparent = gdImageGetTransparent(src);
+
+        if (transparent != -1) {
+            palette = colors;
+            red = gdImageRed(src, transparent);
+            green = gdImageGreen(src, transparent);
+            blue = gdImageBlue(src, transparent);
+
+            goto transparent;
+        }
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,fastcgi_ignore_client_abort,"    if (!u->store && !r->post_action && !u->conf->ignore_client_abort) {
+
+        if (r->connection->read->ready) {
+            ngx_post_event(r->connection->read, &ngx_posted_events);
+
+        } else {
+            if (ngx_handle_read_event(r->connection->read, 0) != NGX_OK) {
+                ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
+                return;
+            }
+        }
+
+        r->read_event_handler = ngx_http_upstream_rd_check_broken_connection;
+        r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
+    }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,fastcgi_socket_keepalive,    } while (recursive && p > xff);,P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,memcached_next_upstream,"    if (u->peer.tries == 0
+        || ((u->conf->next_upstream & ft_type) != ft_type)
+        || (u->request_sent && r->request_body_no_buffering)
+        || (timeout && ngx_current_msec - u->peer.start_time >= timeout))",P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,proxy_cache_lock_age,c->node->lock_time = now + c->lock_age;,P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,proxy_ignore_client_abort,"        if (!u->store && !r->post_action && !u->conf->ignore_client_abort) {
+            r->read_event_handler =
+                                  ngx_http_upstream_rd_check_broken_connection;
+        }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,scgi_cache_methods,"        if (!(r->method & u->conf->cache_methods)) {
+            return NGX_DECLINED;
+        }",P-V,Functionality and Others,/,/,/,/,/,yes,/
+nginx,scgi_cache_revalidate,"    if (status == NGX_HTTP_NOT_MODIFIED
+        && u->cache_status == NGX_HTTP_CACHE_EXPIRED
+        && u->conf->cache_revalidate)",P-V,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,parallel_leader_participation,"	gatherstate->need_to_scan_locally =
+		!node->single_copy && parallel_leader_participation;",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,yes,Optimization is Ture
+postgresql,syslog_split_messages,"	if (syslog_split_messages && (len > PG_SYSLOG_LIMIT || nlpos != NULL))
+	{",P-V,Performance,Workload Adaption,Optimization On-off,/,Performance Degradation,/,yes,Optimization is Ture
+postgresql,bgwriter_lru_multiplier,upcoming_alloc_est = (int) (smoothed_alloc * bgwriter_lru_multiplier);,P-V,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,enableFsync,"	if (!enableFsync ||
+		wal_sync_method == WAL_SYNC_METHOD_OPEN ||
+		wal_sync_method == WAL_SYNC_METHOD_OPEN_DSYNC)
+		return;",P-V,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,Geqo_pool_size,new_pool->data = (Chromosome *) palloc(pool_size * sizeof(Chromosome));,P-V,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,log_connections,"	if (Log_connections && status == STATUS_OK &&
+		!MyClientConnectionInfo.authn_id)
+	{",P-V,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,max_locks_per_xact,"mul_size(max_locks_per_xact, add_size(MaxBackends, max_prepared_xacts))",P-V,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,wal_keep_size_mb,"keep_segs = ConvertToXSegs(wal_keep_size_mb, wal_segment_size);",P-V,Functionality and Others,/,/,/,/,/,yes,/
+yarn,ROUTER_INTERCEPTOR_ALLOW_PARTIAL_RESULT_ENABLED,"        if (!allowPartialResult && exception != null) {
+          throw exception;
+        }",P-V,Functionality and Others,/,/,/,runtime error,/,no,/
+yarn,ROUTER_WEBAPP_ADDRESS,"        builder.addEndpoint(URI.create(httpScheme + bindAddress +
+            "":"" + startPort));",P-V,Functionality and Others,/,/,/,/,/,no,/
+yarn,ROUTER_WEBAPP_PARTIAL_RESULTS_ENABLED,"      if (returnPartialResult || (a.getName() != null
+          && !(a.getName().startsWith(UnmanagedApplicationManager.APP_NAME)
+              || a.getName().startsWith(PARTIAL_REPORT)))) {",P-V,Functionality and Others,/,/,/,/,/,no,/
+yarn,APPLICATION_HISTORY_ENABLED,"    if (timelineV1ServiceEnabled || conf.getBoolean(
+        YarnConfiguration.APPLICATION_HISTORY_ENABLED,
+        YarnConfiguration.DEFAULT_APPLICATION_HISTORY_ENABLED)) {
+      historyServiceEnabled = true;
+      historyClient = AHSClient.createAHSClient();
+      historyClient.init(conf);
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+yarn,FEDERATION_ENABLED,"    if (args.length < 1 || !isFederationEnabled) {
+      printUsage(CMD_EMPTY);
+      return EXIT_ERROR;
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+yarn,LOG_AGGREGATION_ENABLED,"    if (tokenKeepAliveEnabled && delayedRemovalThread != null) {
+      delayedRemovalThread.interrupt();
+      try {
+        delayedRemovalThread.join(1000);
+      } catch (InterruptedException e) {
+        LOG.info(""Interrupted while joining on delayed removal thread."", e);
+      }
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+yarn,YARN_ACL_ENABLE,if (!isRecovery && YarnConfiguration.isAclEnabled(conf)) {,P-V,Functionality and Others,/,/,/,/,/,no,/
+yarn,YARN_INTERMEDIATE_DATA_ENCRYPTION,"    if (fs.getScheme().toLowerCase().contains(""hdfs"")
+        && intermediateEncryptionEnabled
+        && !fs.getXAttrs(p).containsKey(UNREADABLE_BY_SUPERUSER_XATTRIB)) {
+      fs.setXAttr(p, UNREADABLE_BY_SUPERUSER_XATTRIB, null,
+        EnumSet.of(XAttrSetFlag.CREATE));
+    }",P-V,Functionality and Others,/,/,/,/,/,no,/
+zookeeper,zookeeper.globalOutstandingLimit,int globalOutstandingLimit = super.getGlobalOutstandingLimit() / divisor;,P-V,Functionality and Others,/,/,/,/,/,no,/

@@ -1,0 +1,907 @@
+Software,Parameter,Code Snippet,Code Pattern,Overall Impact,Effect on Software Behavior,How to Control Software Behavior,Special Effect on Software,Bad consequences,Log Information,On-the-fly Update,"The ""Crisis"" Behind Specific Interactions"
+hbase,hbase.hstore.flusher.count,"  private int getHandlerCount(Configuration conf) {
+    int handlerCount = conf.getInt(""hbase.hstore.flusher.count"", 2);
+    if (handlerCount < 1) {
+      LOG.warn(
+        ""hbase.hstore.flusher.count was configed to {} which is less than 1, "" + ""corrected to 1"",
+        handlerCount);
+      handlerCount = 1;
+    }
+    return handlerCount;
+  }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"      LOG.warn(
+        ""hbase.hstore.flusher.count was configed to {} which is less than 1, "" + ""corrected to 1""",yes,Differ from the parameters' default value
+hbase,hbase.server.compactchecker.interval.multiplier,"    this.compactionCheckMultiplier = conf.getInt(COMPACTCHECKER_INTERVAL_MULTIPLIER_KEY,
+      DEFAULT_COMPACTCHECKER_INTERVAL_MULTIPLIER);
+    if (this.compactionCheckMultiplier <= 0) {
+      LOG.error(""Compaction check period multiplier must be positive, setting default: {}"",
+        DEFAULT_COMPACTCHECKER_INTERVAL_MULTIPLIER);
+      this.compactionCheckMultiplier = DEFAULT_COMPACTCHECKER_INTERVAL_MULTIPLIER;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"LOG.error(""Compaction check period multiplier must be positive, setting default: {}"",
+        DEFAULT_COMPACTCHECKER_INTERVAL_MULTIPLIER);",no,Same as default value
+hbase,hbase.region.store.parallel.put.print.threshold,"    int confPrintThreshold =
+      this.conf.getInt(""hbase.region.store.parallel.put.print.threshold"", 50);
+    if (confPrintThreshold < 10) {
+      confPrintThreshold = 10;
+    }
+    this.parallelPutCountPrintThreshold = confPrintThreshold;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+hbase,hbase.regionserver.handler.abort.on.error.percent,"        if (
+          this.handlerFailureThreshhold >= 0
+            && failedCount > handlerCount * this.handlerFailureThreshhold
+        ) {
+          String message = ""Number of failed RpcServer handler runs exceeded threshhold ""
+            + this.handlerFailureThreshhold + ""; reason: "" + StringUtils.stringifyException(e);
+          if (abortable != null) {
+            abortable.abort(message, e);
+          } else {
+            LOG.error(""Error but can't abort because abortable is null: ""
+              + StringUtils.stringifyException(e));
+            throw e;
+          }
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hbase,hbase.hstore.flush.retries.number,"    flushRetriesNumber =
+      conf.getInt(""hbase.hstore.flush.retries.number"", DEFAULT_FLUSH_RETRIES_NUMBER);
+    pauseTime = conf.getInt(HConstants.HBASE_SERVER_PAUSE, HConstants.DEFAULT_HBASE_SERVER_PAUSE);
+    if (flushRetriesNumber <= 0) {
+      throw new IllegalArgumentException(
+        ""hbase.hstore.flush.retries.number must be > 0, not "" + flushRetriesNumber);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hbase,hbase.hstore.blockingStoreFiles,"        if (blockingFileCount < 1000) {
+          message =
+            ""Blocking file count '"" + HStore.BLOCKING_STOREFILES_KEY + ""' "" + blockingFileCount
+              + "" is below recommended minimum of 1000 for column family "" + hcd.getNameAsString();
+          throw new IOException(message);
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hbase,hbase.client.scanner.max.result.size,"  private long resultSize2CacheSize(long maxResultSize) {
+    // * 2 if possible
+    return maxResultSize > Long.MAX_VALUE / 2 ? maxResultSize : maxResultSize * 2;
+  }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hbase,hbase.hregion.majorcompaction.jitter,"    if (jitterPct <= 0) {
+      return period;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hbase,hbase.regionserver.storefile.refresh.period,"    if (storefileRefreshPeriod > 0) {
+      this.storefileRefresher =
+        new StorefileRefresherChore(storefileRefreshPeriod, onlyMetaRefresh, this, this);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hbase,hbase.master.balancer.maxRitPercent,"    int numRegions = this.assignmentManager.getRegionStates().getRegionAssignments().size();
+    return Math.max((int) Math.floor(numRegions * this.maxRitPercent), 1);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hbase,hbase.mob.cache.evict.remain.ratio,"      if (evictRemainRatio < 0.0) {
+        evictRemainRatio = 0.0f;
+        LOG.warn(MobConstants.MOB_CACHE_EVICT_REMAIN_RATIO + "" is less than 0.0, 0.0 is used."");
+      } else if (evictRemainRatio > 1.0) {
+        evictRemainRatio = 1.0f;
+        LOG.warn(MobConstants.MOB_CACHE_EVICT_REMAIN_RATIO + "" is larger than 1.0, 1.0 is used."");
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hbase,hbase.storescanner.pread.max.bytes,"        if (scanInfo.isUsePread()) {
+          this.readType = Scan.ReadType.PREAD;
+        } else if (this.preadMaxBytes < 0) {
+          this.readType = Scan.ReadType.STREAM;
+        } else {
+          this.readType = Scan.ReadType.DEFAULT;
+        }",C->P,Functionality and Others,/,/,/,/,/,no,/
+hdfs,dfs.image.parallel.target.sections,"        if (targetSections <= 0) {
+          LOG.warn(""{} is set to {}. It must be greater than zero. Setting to"" +
+              "" default of {}"",
+              DFSConfigKeys.DFS_IMAGE_PARALLEL_TARGET_SECTIONS_KEY,
+              targetSections,
+              DFSConfigKeys.DFS_IMAGE_PARALLEL_TARGET_SECTIONS_DEFAULT);
+          targetSections =
+              DFSConfigKeys.DFS_IMAGE_PARALLEL_TARGET_SECTIONS_DEFAULT;
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"          LOG.warn(""{} is set to {}. It must be greater than zero. Setting to"" +
+              "" default of {}"",
+              DFSConfigKeys.DFS_IMAGE_PARALLEL_TARGET_SECTIONS_KEY,
+              targetSections,
+              DFSConfigKeys.DFS_IMAGE_PARALLEL_TARGET_SECTIONS_DEFAULT);
+          targetSections =
+              DFSConfigKeys.DFS_IMAGE_PARALLEL_TARGET_SECTIONS_DEFAULT;",no,Same as default value
+hdfs,dfs.disk.balancer.max.disk.errors,"      if (this.maxDiskErrors < 0) {
+        LOG.debug(""Found  less than 0 for maxDiskErrors value, ignoring "" +
+            ""config value. value : "" + maxDiskErrors);
+        maxDiskErrors =
+            DFSConfigKeys.DFS_DISK_BALANCER_MAX_DISK_ERRORS_DEFAULT;
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"        LOG.debug(""Found  less than 0 for maxDiskErrors value, ignoring "" +
+            ""config value. value : "" + maxDiskErrors);",no,Same as default value
+hdfs,dfs.namenode.safemode.recheck.interval,"      if (recheckInterval < 1) {
+        LOG.warn(""Invalid value for "" +
+            DFSConfigKeys.DFS_NAMENODE_SAFEMODE_RECHECK_INTERVAL_KEY +
+            "". Should be greater than 0, but is {}"", recheckInterval);
+        recheckInterval = DFSConfigKeys.DFS_NAMENODE_SAFEMODE_RECHECK_INTERVAL_DEFAULT;
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"        LOG.warn(""Invalid value for "" +
+            DFSConfigKeys.DFS_NAMENODE_SAFEMODE_RECHECK_INTERVAL_KEY +
+            "". Should be greater than 0, but is {}"", recheckInterval);",no,Same as default value
+hdfs,dfs.namenode.decommission.backoff.monitor.pending.blocks.per.lock,"    if (blocksPerLock <= 0) {
+      LOG.error(""{} is set to an invalid value, it must be greater than ""+
+              ""zero. Defaulting to {}"",
+          DFSConfigKeys.
+              DFS_NAMENODE_DECOMMISSION_BACKOFF_MONITOR_PENDING_BLOCKS_PER_LOCK,
+          DFSConfigKeys.
+              DFS_NAMENODE_DECOMMISSION_BACKOFF_MONITOR_PENDING_BLOCKS_PER_LOCK_DEFAULT);
+      blocksPerLock =
+          DFSConfigKeys.
+              DFS_NAMENODE_DECOMMISSION_BACKOFF_MONITOR_PENDING_BLOCKS_PER_LOCK_DEFAULT;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"      LOG.error(""{} is set to an invalid value, it must be greater than ""+
+              ""zero. Defaulting to {}"",
+          DFSConfigKeys.
+              DFS_NAMENODE_DECOMMISSION_BACKOFF_MONITOR_PENDING_BLOCKS_PER_LOCK,
+          DFSConfigKeys.
+              DFS_NAMENODE_DECOMMISSION_BACKOFF_MONITOR_PENDING_BLOCKS_PER_LOCK_DEFAULT);",yes,Same as default value
+hdfs,dfs.namenode.decommission.max.concurrent.tracked.nodes,"    if (this.maxConcurrentTrackedNodes < 0) {
+      LOG.error(""{} is set to an invalid value, it must be zero or greater. ""+
+              ""Defaulting to {}"",
+          DFSConfigKeys.DFS_NAMENODE_DECOMMISSION_MAX_CONCURRENT_TRACKED_NODES,
+          DFSConfigKeys
+              .DFS_NAMENODE_DECOMMISSION_MAX_CONCURRENT_TRACKED_NODES_DEFAULT);
+      this.maxConcurrentTrackedNodes =
+          DFSConfigKeys
+              .DFS_NAMENODE_DECOMMISSION_MAX_CONCURRENT_TRACKED_NODES_DEFAULT;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"      LOG.error(""{} is set to an invalid value, it must be zero or greater. ""+
+              ""Defaulting to {}"",
+          DFSConfigKeys.DFS_NAMENODE_DECOMMISSION_MAX_CONCURRENT_TRACKED_NODES,
+          DFSConfigKeys
+              .DFS_NAMENODE_DECOMMISSION_MAX_CONCURRENT_TRACKED_NODES_DEFAULT);",no,Same as default value
+hdfs,dfs.client-write-packet-size,"    writePacketSize = dfsClient.getConf().getWritePacketSize();
+    if (writePacketSize > PacketReceiver.MAX_PACKET_SIZE) {
+      LOG.warn(
+          ""Configured write packet exceeds {} bytes as max,""
+              + "" using {} bytes."",
+          PacketReceiver.MAX_PACKET_SIZE, PacketReceiver.MAX_PACKET_SIZE);
+      writePacketSize = PacketReceiver.MAX_PACKET_SIZE;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"      LOG.warn(
+          ""Configured write packet exceeds {} bytes as max,""
+              + "" using {} bytes."",
+          PacketReceiver.MAX_PACKET_SIZE, PacketReceiver.MAX_PACKET_SIZE);
+      writePacketSize = PacketReceiver.MAX_PACKET_SIZE;
+    }",no,Same as default value
+hdfs,dfs.client.test.drop.namenode.response.number,"    if (numResponseToDrop > 0) {
+      // This case is used for testing.
+      LOG.warn(""{} is set to {} , this hacked client will proactively drop responses"",
+          DFS_CLIENT_TEST_DROP_NAMENODE_RESPONSE_NUM_KEY, numResponseToDrop);
+      proxyInfo = NameNodeProxiesClient.createProxyWithLossyRetryHandler(conf,
+          nameNodeUri, ClientProtocol.class, numResponseToDrop,
+          nnFallbackToSimpleAuth);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"      LOG.warn(""{} is set to {} , this hacked client will proactively drop responses"",
+          DFS_CLIENT_TEST_DROP_NAMENODE_RESPONSE_NUM_KEY, numResponseToDrop);
+      proxyInfo = NameNodeProxiesClient.createProxyWithLossyRetryHandler(conf,
+          nameNodeUri, ClientProtocol.class, numResponseToDrop,
+          nnFallbackToSimpleAuth);",no,/
+hdfs,dfs.datanode.reconcile.blocks.batch.interval,"    if (reconcileBatchInterval <= 0) {
+      LOG.warn(""Invalid value configured for "" +
+              ""dfs.datanode.reconcile.blocks.batch.interval, "" +
+              ""should be greater than 0, Using default."");
+      reconcileBatchInterval =
+          DFSConfigKeys.
+              DFS_DATANODE_RECONCILE_BLOCKS_BATCH_INTERVAL_DEFAULT;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"      LOG.warn(""Invalid value configured for "" +
+              ""dfs.datanode.reconcile.blocks.batch.interval, "" +
+              ""should be greater than 0, Using default."");
+      reconcileBatchInterval =
+          DFSConfigKeys.
+              DFS_DATANODE_RECONCILE_BLOCKS_BATCH_INTERVAL_DEFAULT;",no,Same as default value
+hdfs,dfs.datanode.reconcile.blocks.batch.size,"    if (reconcileBatchSize <= 0) {
+      LOG.warn(""Invalid value configured for "" +
+              ""dfs.datanode.reconcile.blocks.batch.size, "" +
+              ""should be greater than 0, Using default."");
+      reconcileBatchSize =
+          DFSConfigKeys.
+              DFS_DATANODE_RECONCILE_BLOCKS_BATCH_SIZE_DEFAULT;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"      LOG.warn(""Invalid value configured for "" +
+              ""dfs.datanode.reconcile.blocks.batch.size, "" +
+              ""should be greater than 0, Using default."");
+      reconcileBatchSize =
+          DFSConfigKeys.
+              DFS_DATANODE_RECONCILE_BLOCKS_BATCH_SIZE_DEFAULT;",no,Same as default value
+hdfs,dfs.ha.tail-edits.namenode-retries,"    if (maxRetries <= 0) {
+      LOG.error(""Specified a non-positive number of retries for the number of retries for the "" +
+          ""namenode connection when manipulating the edit log ("" +
+          DFSConfigKeys.DFS_HA_TAILEDITS_ALL_NAMESNODES_RETRY_KEY + ""), setting to default: "" +
+          DFSConfigKeys.DFS_HA_TAILEDITS_ALL_NAMESNODES_RETRY_DEFAULT);
+      maxRetries = DFSConfigKeys.DFS_HA_TAILEDITS_ALL_NAMESNODES_RETRY_DEFAULT;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"    if (maxRetries <= 0) {
+      LOG.error(""Specified a non-positive number of retries for the number of retries for the "" +
+          ""namenode connection when manipulating the edit log ("" +
+          DFSConfigKeys.DFS_HA_TAILEDITS_ALL_NAMESNODES_RETRY_KEY + ""), setting to default: "" +
+          DFSConfigKeys.DFS_HA_TAILEDITS_ALL_NAMESNODES_RETRY_DEFAULT);",no,/
+hdfs,dfs.namenode.redundancy.considerLoad.factor,"    final double maxLoad = considerLoadFactor * inServiceXceiverCount;
+
+    final int nodeLoad = node.getXceiverCount();
+    if ((nodeLoad > maxLoad) && (maxLoad > 0)) {
+      logNodeIsNotChosen(node, NodeNotChosenReason.NODE_TOO_BUSY,
+          ""(load: "" + nodeLoad + "" > "" + maxLoad + "")"");
+      return true;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/," ""(load: "" + nodeLoad + "" > "" + maxLoad + "")"");",no,/
+hdfs,dfs.client.socket.send.buffer.size,"    if (conf.getSocketSendBufferSize() > 0) {
+      sock.setSendBufferSize(conf.getSocketSendBufferSize());
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/," LOG.debug(""SocketCache disabled."");",no,/
+hdfs,dfs.namenode.redundancy.considerLoad.factor,"    if (considerLoadByVolume) {
+      final int numVolumesAvailable = node.getNumVolumesAvailable();
+      final double maxLoadForVolumes = considerLoadFactor * numVolumesAvailable *
+          stats.getInServiceXceiverAverageForVolume();
+      if (maxLoadForVolumes > 0.0 && nodeLoad > maxLoadForVolumes) {
+        logNodeIsNotChosen(node, NodeNotChosenReason.NODE_TOO_BUSY_BY_VOLUME,
+            ""(load: "" + nodeLoad + "" > "" + maxLoadForVolumes + "") "");
+        return true;
+      }
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"logNodeIsNotChosen(node, NodeNotChosenReason.NODE_TOO_BUSY_BY_VOLUME,
+            ""(load: "" + nodeLoad + "" > "" + maxLoadForVolumes + "") "");",no,/
+hdfs,dfs.namenode.handler.count,"        lifelineHandlerCount = Math.max(
+            (int)(handlerCount * lifelineHandlerRatio), 1);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+hdfs,io.file.buffer.size,"buf = new byte[(int)Math.min(len/2, IO_FILE_BUFFER_SIZE)];",C->P,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,no,Differ from the parameters' default value
+hdfs,dfs.image.parallel.threads£¨workload£©,"    private ExecutorService getParallelExecutorService() {
+      int threads = conf.getInt(DFSConfigKeys.DFS_IMAGE_PARALLEL_THREADS_KEY,
+          DFSConfigKeys.DFS_IMAGE_PARALLEL_THREADS_DEFAULT);
+      if (threads < 1) {
+        LOG.warn(""Parallel is enabled and {} is set to {}. Setting to the "" +
+            ""default value {}"", DFSConfigKeys.DFS_IMAGE_PARALLEL_THREADS_KEY,
+            threads, DFSConfigKeys.DFS_IMAGE_PARALLEL_THREADS_DEFAULT);
+        threads = DFSConfigKeys.DFS_IMAGE_PARALLEL_THREADS_DEFAULT;
+      }
+      ExecutorService executorService = Executors.newFixedThreadPool(
+          threads);
+      LOG.info(""The fsimage will be loaded in parallel using {} threads"",
+          threads);
+      return executorService;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+hdfs,dfs.datanode.scan.period.hours,"      if (tempScanPeriodMs == 0) {
+        tempScanPeriodMs = TimeUnit.MILLISECONDS.convert(
+            DFS_DATANODE_SCAN_PERIOD_HOURS_DEFAULT, TimeUnit.HOURS);
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+hdfs,dfs.datanode.failed.volumes.tolerated,"    if (maxVolumeFailuresTolerated < DataNode.MAX_VOLUME_FAILURE_TOLERATED_LIMIT) {
+      throw new HadoopIllegalArgumentException(""Invalid value configured for ""
+          + DFS_DATANODE_FAILED_VOLUMES_TOLERATED_KEY + "" - ""
+          + maxVolumeFailuresTolerated + "" ""
+          + DataNode.MAX_VOLUME_FAILURES_TOLERATED_MSG);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hdfs,dfs.datanode.failed.volumes.tolerated,"    if (maxVolumeFailuresTolerated == DataNode.MAX_VOLUME_FAILURE_TOLERATED_LIMIT) {
+      if (dataDirs.size() == failedLocations.size()) {
+        throw new DiskErrorException(""Too many failed volumes - ""
+            + ""current valid volumes: "" + goodLocations.size()
+            + "", volumes configured: "" + dataDirs.size()
+            + "", volumes failed: "" + failedLocations.size()
+            + "", volume failures tolerated: "" + maxVolumeFailuresTolerated);
+      }
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hdfs,dfs.namenode.fs-limits.max-xattrs-per-inode,"    Preconditions.checkArgument(this.inodeXAttrsLimit >= 0,
+        ""Cannot set a negative limit on the number of xattrs per inode (%s)."",
+        DFSConfigKeys.DFS_NAMENODE_MAX_XATTRS_PER_INODE_KEY);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hdfs,dfs.namenode.list.openfiles.num.responses,"      Preconditions.checkArgument(maxListOpenFilesResponses > 0,
+          DFSConfigKeys.DFS_NAMENODE_LIST_OPENFILES_NUM_RESPONSES +
+              "" must be a positive integer.""
+      );",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hdfs,dfs.namenode.lazypersist.file.scrub.interval.sec,"      if (this.lazyPersistFileScrubIntervalSec < 0) {
+        throw new IllegalArgumentException(
+            DFS_NAMENODE_LAZY_PERSIST_FILE_SCRUB_INTERVAL_SEC
+                + "" must be zero (for disable) or greater than zero."");
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hdfs,DFS_BALANCER_DISPATCHERTHREADS_KEY,"    this.dispatchExecutor = dispatcherThreads == 0? null
+        : Executors.newFixedThreadPool(dispatcherThreads);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hdfs,dfs.datanode.transfer.socket.recv.buffer.size,"    if (recvBufferSize > 0) {
+      domainPeerServer.setReceiveBufferSize(recvBufferSize);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hdfs,dfs.ha.zkfc.port,"      if (port != 0) {
+        setZkfcPort(port);
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hdfs,dfs.client.socketcache.capacity,"    if (capacity == 0 ) {
+      LOG.debug(""SocketCache disabled."");
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hdfs,dfs.datanode.data.transfer.bandwidthPerSec,"    if (bandwidthPerSec > 0) {
+      this.transferThrottler = new DataTransferThrottler(bandwidthPerSec);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+hdfs,dfs.datanode.max.transfer.threads,"    Preconditions.checkArgument(this.maxXceiverCount >= 1,
+        DFSConfigKeys.DFS_DATANODE_MAX_RECEIVER_THREADS_KEY +
+        "" should not be less than 1."");",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+hdfs,dfs.datanode.readahead.bytes,"    if ((readaheadLength > 0) && (datanode.readaheadPool != null) &&
+          (alwaysReadahead || isLongRead())) {
+      curReadahead = datanode.readaheadPool.readaheadStream(
+          clientTraceFmt, ris.getDataInFd(), offset, readaheadLength,
+          Long.MAX_VALUE, curReadahead);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hdfs,dfs.namenode.replication.work.multiplier.per.iteration,"    Preconditions.checkArgument(
+        (blocksReplWorkMultiplier > 0),
+        DFSConfigKeys.DFS_NAMENODE_REPLICATION_WORK_MULTIPLIER_PER_ITERATION +
+        "" = '"" + blocksReplWorkMultiplier + ""' is invalid. "" +
+        ""It should be a positive, non-zero integer value."");",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+hive,hive.repl.stats.events.count,"        if (numEvents < 0) {
+          LOG.warn(""Invalid value configured for {}, Using default of {}"", REPL_STATS_TOP_EVENTS_COUNTS,
+              REPL_STATS_TOP_EVENTS_COUNTS.defaultIntVal);
+          numEvents = REPL_STATS_TOP_EVENTS_COUNTS.defaultIntVal;
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"          LOG.warn(""Invalid value configured for {}, Using default of {}"", REPL_STATS_TOP_EVENTS_COUNTS,
+              REPL_STATS_TOP_EVENTS_COUNTS.defaultIntVal);",no,Same as default value
+hive,hive.tez.container.size,"    if (memorySizeMb <= 0) {
+      LOG.warn(""No Tez container size specified by {}. Falling back to MapReduce container MB {}"",
+          HiveConf.ConfVars.HIVETEZCONTAINERSIZE,  MRJobConfig.MAP_MEMORY_MB);
+      memorySizeMb = conf.getInt(MRJobConfig.MAP_MEMORY_MB, MRJobConfig.DEFAULT_MAP_MEMORY_MB);
+      // When config is explicitly set to ""-1"" defaultValue does not work!
+      if (memorySizeMb <= 0) {
+        LOG.warn(""Falling back to default container MB {}"", MRJobConfig.DEFAULT_MAP_MEMORY_MB);
+        memorySizeMb = MRJobConfig.DEFAULT_MAP_MEMORY_MB;
+      }
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"LOG.warn(""Falling back to default container MB {}"", MRJobConfig.DEFAULT_MAP_MEMORY_MB);
+memorySizeMb = MRJobConfig.DEFAULT_MAP_MEMORY_MB;",no,Same as default value
+hive,hive.repl.stats.events.count,"    if (k > TOP_K_MAX) {
+      LOG.warn(""Value for {} exceeded maximum permissible limit. Using Maximum of {}"", REPL_STATS_TOP_EVENTS_COUNTS,
+              TOP_K_MAX);
+      k = TOP_K_MAX;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+hive,hive.metastore.fshandler.threads,"    int threads = Math.max(1, conf.getIntVar(ConfVars.METASTORE_FS_HANDLER_THREADS_COUNT));
+    final ExecutorService pool = Executors.newFixedThreadPool(threads,
+                new ThreadFactoryBuilder()
+                    .setDaemon(true)
+                    .setNameFormat(""Get-Partitions-Size-%d"")
+                    .build());",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+hive,hive.compactor.wait.timeout,"waitTimeMs = Math.min(waitTimeMs, waitTimeOut);",C->P,Reliability,Misconfiguration Prevention,Invalid config,Prevent excessive resource utilization,unexpected results,/,no,Differ from the parameters' default value
+hive,hive.metastore.direct.sql.batch.size,"    if (batchSize == DETECT_BATCHING) {
+      batchSize = dbType.needsInBatching() ? 1000 : NO_BATCHING;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+hive,hive.metastore.fshandler.threads,"      if (threads <= 1) {
+        pool = MoreExecutors.newDirectExecutorService();
+      } else {
+        pool = Executors.newFixedThreadPool(threads, new ThreadFactoryBuilder().setDaemon(true).setNameFormat(""Get-Partitions-Size-%d"").build());
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+hive,hive.stats.ndv.estimate.percent,"float ndvPercent = Math.min(100L, HiveConf.getFloatVar(conf, ConfVars.HIVE_STATS_NDV_ESTIMATE_PERC));",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+hive,hive.mapjoin.optimized.hashtable.wbsize,"    int maxCapacity =  (maxProbeSize <= 0) ? DEFAULT_MAX_CAPACITY
+        : (int)Math.min((long)DEFAULT_MAX_CAPACITY, maxProbeSize / 8);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+hive,STATS_AUTO_UPDATE_WORKER_COUNT,"    if (workerCount <= 0) {
+      workerCount = 1;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+hive,hive.llap.zk.sm.session.timeout,"long connTimeoutMs = Math.max(sessionTimeoutMs, ZK_DTSM_ZK_CONNECTION_TIMEOUT_DEFAULT);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+hive,hive.repl.approx.max.load.tasks,"      if (shouldBatch && maxEventsPerBatch == 0) {
+        throw new SemanticException(String.format(
+                ""batch size configured via %s cannot be set to zero since batching is enabled"",
+                HiveConf.ConfVars.REPL_APPROX_MAX_LOAD_TASKS.varname));
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hive,hive.repl.bootstrap.dump.open.txn.timeout,assert (waitUntilTime > 0);,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hive,REPL_EXTERNAL_TABLE_BASE_DIR,"    String baseDir = hiveConf.get(HiveConf.ConfVars.REPL_EXTERNAL_TABLE_BASE_DIR.varname);
+    URI baseDirUri  = StringUtils.isEmpty(baseDir) ? null : new Path(baseDir).toUri();
+    if (baseDirUri == null || baseDirUri.getScheme() == null || baseDirUri.getAuthority() == null) {
+      throw new SemanticException(ErrorMsg.REPL_INVALID_CONFIG_FOR_SERVICE.format(
+              String.format(""Fully qualified path for 'hive.repl.replica.external.table.base.dir' is required %s"",
+                      baseDir == null ? """" : ""- ('"" + baseDir + ""')""), ReplUtils.REPL_HIVE_SERVICE));
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+hive,SCRIPTERRORLIMIT,"      if ((maxBytes < 0) || (bytesCopied < maxBytes)) {
+        System.err.println(stringLine);
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hive,hive.basic.stats.max.threads.factor,if (fileList.size() > 1 && numThreadsFactor > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hive,hive.metastore.client.connect.retry.delay,"      if (!isConnected && retryDelaySeconds > 0) {
+        try {
+          LOG.info(""Waiting "" + retryDelaySeconds + "" seconds before next connection attempt."");
+          Thread.sleep(retryDelaySeconds * 1000);
+        } catch (InterruptedException ignore) {}
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hive,hive.direct.sql.max.query.length,"    if (inList == null || inList.size() == 0 || maxQueryLength <= 0 || batchSize <= 0) {
+      throw new IllegalArgumentException(""The IN list is empty!"");
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hive,hive.metastore.limit.partition.request,"  private boolean isPartitionLimitEnabled() {
+    int partitionLimit = MetastoreConf.getIntVar(conf, ConfVars.LIMIT_PARTITION_REQUEST);
+    return partitionLimit > -1;
+  }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hive,hive.metastore.wm.default.pool.size,"    if (defaultPoolSize > 0 && plan.isSetQueryParallelism()) {
+      // If the default pool is not disabled, override the size with the specified parallelism.
+      defaultPoolSize = plan.getQueryParallelism();
+    }
+    try {
+      getMS().createResourcePlan(plan, request.getCopyFrom(), defaultPoolSize);
+      return new WMCreateResourcePlanResponse();
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hive,hive.ptf.rangecache.size,boundaryCache = boundaryCacheSize >= 1 ? new BoundaryCache(boundaryCacheSize) : null;,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+hive,hive.stats.gather.num.threads,"        int threadCount = HiveConf.getIntVar(pctx.getConf(),
+          HiveConf.ConfVars.HIVE_STATS_GATHER_NUM_THREADS);
+        final ExecutorService pool = (threadCount > 0) ?
+          Executors.newFixedThreadPool(threadCount,
+            new ThreadFactoryBuilder()
+              .setDaemon(true)
+              .setNameFormat(""SimpleFetchOptimizer-FileLength-%d"").build()) : null;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+httpd,ProxyReceiveBufferSize ,"        if (conf->recv_buffer_size > 0 &&
+            (rv = apr_socket_opt_set(*newsock, APR_SO_RCVBUF,
+                                     conf->recv_buffer_size))) {
+            ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r, APLOGNO(00936)
+                          ""apr_socket_opt_set(SO_RCVBUF): Failed to set ""
+                          ""ProxyReceiveBufferSize, using default"");
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"            ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r, APLOGNO(00936)
+                          ""apr_socket_opt_set(SO_RCVBUF): Failed to set ""
+                          ""ProxyReceiveBufferSize, using default"");",yes,/
+httpd,fout_buf_plain_len,"    if (fctx->fout_buf_plain_len) {
+        rv = fout_pass_buf_to_rustls(fctx, fctx->fout_buf_plain, fctx->fout_buf_plain_len);
+        ap_log_cerror(APLOG_MARK, APLOG_TRACE2, rv, fctx->c,
+                     ""fout_pass_all_to_tls: %ld plain bytes written to rustls"",
+                     (long)fctx->fout_buf_plain_len);
+        if (APR_SUCCESS != rv) goto cleanup;
+        fctx->fout_buf_plain_len = 0;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"        ap_log_cerror(APLOG_MARK, APLOG_TRACE2, rv, fctx->c,
+                     ""fout_pass_all_to_tls: %ld plain bytes written to rustls"",
+                     (long)fctx->fout_buf_plain_len);",yes,/
+httpd,limit_req_body,"    if (limit_req_body > 0 && (r->remaining > limit_req_body)) {
+        /* 01588 msg in HTTP_IN filter will be skipped for a connection-dropping status,
+         * in r->status, so log a similar message here.
+         */
+        ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(10483)
+                ""Requested content-length of %"" APR_OFF_T_FMT
+                "" is larger than the configured limit""
+                "" of %"" APR_OFF_T_FMT, r->remaining, limit_req_body);
+
+        return HTTP_REQUEST_ENTITY_TOO_LARGE;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"        ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(10483)
+                ""Requested content-length of %"" APR_OFF_T_FMT
+                "" is larger than the configured limit""
+                "" of %"" APR_OFF_T_FMT, r->remaining, limit_req_body);",yes,/
+httpd,io_buffer_size,"    if (maxsize > AJP_MAX_BUFFER_SZ)
+       maxsize = AJP_MAX_BUFFER_SZ;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Differ from the parameters' default value
+httpd,MDRetryFailover,"    retry_failover = atoi(value);
+    if (retry_failover <= 0) {
+        return ""invalid argument, must be a number > 0"";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,Same as default value
+httpd,limit_xml_body,"    if (conf->limit_xml_body < 0)
+        return ""LimitXMLRequestBody requires a non-negative integer."";
+
+    /* zero is AP_MAX_LIMIT_XML_BODY (implicitly) */
+    if ((apr_size_t)conf->limit_xml_body > AP_MAX_LIMIT_XML_BODY)
+        return apr_psprintf(cmd->pool, ""LimitXMLRequestBody must not exceed ""
+                            ""%"" APR_SIZE_T_FMT, AP_MAX_LIMIT_XML_BODY);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,ProxyMaxForwards,"        if (maxfwd < 0 || maxfwd == APR_INT64_MAX || *end) {
+            ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, r, APLOGNO(10188) 
+                          ""Max-Forwards value '%s' could not be parsed"", str);
+            return ap_proxyerror(r, HTTP_BAD_REQUEST, 
+                          ""Max-Forwards request header could not be parsed"");
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,async_idle_timeout,"    if (ap_timeout_parameter_parse(arg, &conf->async_idle_timeout, ""s"")
+            || conf->async_idle_timeout < 0) {
+        return ""ProxyAsyncIdleTimeout has wrong format"";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,AuthFormSize,"    if (APR_SUCCESS != apr_strtoff(&size, arg, NULL, 10)
+        || size < 0 || size > APR_SIZE_MAX) {
+        return ""AuthCookieFormSize must be a size in bytes, or zero."";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,BufferSize,"    if (APR_SUCCESS != apr_strtoff(&(conf->size), arg, NULL, 10) || conf->size
+            <= 0) {
+        return ""BufferSize must be a size in bytes, and greater than zero"";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,CacheReadSize,"    if (apr_strtoff(&dconf->readsize, arg, NULL, 10) != APR_SUCCESS
+            || dconf->readsize < 0) {
+        return ""CacheSocacheReadSize argument must be a non-negative integer representing the max amount of data to cache in go."";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,CacheSocacheMaxSize,"    if (apr_strtoff(&dconf->max, arg, NULL, 10) != APR_SUCCESS
+            || dconf->max < 1024 || dconf->max > APR_UINT32_MAX) {
+        return ""CacheSocacheMaxSize argument must be a integer representing ""
+               ""the max size of a cached entry (headers and body), at least 1024 ""
+               ""and at most "" APR_STRINGIFY(APR_UINT32_MAX);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,compare_cache_size,"    st->compare_cache_size = atol(size);
+    if (st->compare_cache_size < 0) {
+        st->compare_cache_size = 0;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,CookieSameSite,"            if (samesite && strcmp(samesite, ""0"") && ap_cstr_casecmp(samesite,""false"")) { 
+                cookie = apr_pstrcat(rmain->pool, cookie, ""; SameSite="", 
+                                     samesite, NULL);
+            }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,DeflateInflateRatioLimit,"    if (*errp || dc->inflate_limit < 0) {
+        return ""DeflateInflateLimitRequestBody requires a non-negative integer."";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,fin_bytes_in_rustls,if (fctx->fin_bytes_in_rustls > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,flush_max_pipelined,"        if (is_flush
+            || (memory_bytes_in_brigade > flush_max_threshold)
+            || (flush_max_pipelined >= 0
+                && eor_buckets_in_brigade > flush_max_pipelined)) {",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,H2MaxSessionStreams,"    if (stream->session->max_data_frame_len > 0
+        && length > stream->session->max_data_frame_len) {
+      length = stream->session->max_data_frame_len;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,hsts_max_age,"    if (mc->hsts_max_age > 0) {
+        mc->hsts_header = apr_psprintf(p, ""max-age=%d"", mc->hsts_max_age);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,LDAPReferralHopLimit,if (ldc->ReferralHopLimit != AP_LDAP_HOPLIMIT_UNSET)  {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,lgblock,"    if (val < 16 || val > 24) {
+        return ""BrotliCompressionMaxInputBlock must be between 16 and 24"";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,locktimeout,"    if (conf->locktimeout < 0)
+        return ""DAVMinTimeout requires a non-negative integer."";",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,max_ranges,"    max_ranges = ( (core_conf->max_ranges >= 0 || core_conf->max_ranges == AP_MAXRANGES_UNLIMITED)
+                   ? core_conf->max_ranges
+                   : AP_DEFAULT_MAX_RANGES );",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,must_staple,"    if (md->must_staple < 0) {
+        md->must_staple = md_config_geti(md->sc, MD_CONFIG_MUST_STAPLE);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,ocsp_keep_window,if (ts->norm > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,redirect_limit,"    if (virt->redirect_limit)
+        conf->redirect_limit = virt->redirect_limit;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,SSLRenegBufferSize,"    if (rsize > 0) {
+        /* Fill the I/O buffer with the request body if possible. */
+        rv = ssl_io_buffer_fill(r, rsize);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,SSLSessionCacheTimeout,"    if (sc->session_cache_timeout < 0) {
+        return ""SSLSessionCacheTimeout: Invalid argument"";
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,tls_protocol_min,if (sc->tls_protocol_min > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,TLSProxyProtocol,if (pc->proxy_protocol_min > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+httpd,H2MinWorkers,"    if (*pmaxw <= 0) {
+        *pmaxw = H2MAX(4, 3 * (*pminw) / 2);
+    }",C->P,Reliability,Misconfiguration Prevention,specious config,/,/,/,yes,/
+httpd,enable_mmap,"    if (cfg->enable_mmap == ENABLE_MMAP_OFF) {
+        (void)apr_bucket_file_enable_mmap(e, 0);
+    }",C->P,Functionality and Others,/,/,/,/,/,yes,/
+mapreduce,mapreduce.job.maps,"abortFailureLimit = Math.max(30, totalMaps / 10);",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,no,Differ from the parameters' default value
+mapreduce,mapreduce.job.maps,"this.maxFailedUniqueFetches = Math.min(totalMaps, 5);",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,no,Differ from the parameters' default value
+mapreduce,mapreduce.job.reduces,"    int eventsPerReducer = Math.max(MIN_EVENTS_TO_FETCH,
+        MAX_RPC_OUTSTANDING_EVENTS / jobConf.getNumReduceTasks());
+    int maxEventsToFetch = Math.min(MAX_EVENTS_TO_FETCH, eventsPerReducer);",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,no,Differ from the parameters' default value
+mapreduce,mapreduce.job.maps,"    if (numSplits < 1) {
+      numSplits = 1;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+mapreduce,mapreduce.reduce.input.buffer.percent,"    if (maxRedPer > 1.0 || maxRedPer < 0.0) {
+      throw new RuntimeException(maxRedPer + "": ""
+          + MRJobConfig.REDUCE_INPUT_BUFFER_PERCENT
+          + "" must be a float between 0 and 1.0"");
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+mapreduce,mapreduce.job.running.map.limit,"    if (maxRunningMaps > 0 && numScheduledMaps > 0 &&
+        getJob().getTotalMaps() > maxRunningMaps) {",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+mapreduce,mapreduce.job.running.map.limit,"  private boolean canAssignMaps() {
+    return (maxRunningMaps <= 0
+        || assignedRequests.maps.size() < maxRunningMaps);
+  }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+mapreduce,mapreduce.job.local-fs.single-disk-limit.bytes,"      if (diskLimitCheckThread == null && conf.getLong(
+          MRJobConfig.JOB_SINGLE_DISK_LIMIT_BYTES,
+          MRJobConfig.DEFAULT_JOB_SINGLE_DISK_LIMIT_BYTES) >= 0) {",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+mapreduce,mapreduce.job.running.reduce.limit,"    if (maxRunningReduces > 0 && numScheduledReduces > 0 &&
+        getJob().getTotalReduces() > maxRunningReduces) {
+      int maxRequestedReduces = Math.max(0,
+          maxRunningReduces - assignedRequests.reduces.size());
+      int reduceRequestLimit = Math.min(maxRequestedReduces,
+          numScheduledReduces);
+      setRequestLimit(PRIORITY_REDUCE, reduceResourceRequest,
+          reduceRequestLimit);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+mysql,clone_donor_timeout_after_network_failure,"  if (time_out.count() <= 0) {
+    ib::info(ER_IB_CLONE_RESTART)
+        << ""Clone Master Skip wait after n/w error. Dropping Snapshot."";
+    clone_sys->drop_clone(clone_hdl);
+    return (0);
+  }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"    ib::info(ER_IB_CLONE_RESTART)
+        << ""Clone Master Skip wait after n/w error. Dropping Snapshot."";",yes,/
+mysql,join_buffer_size,"      const double buffer_usage = std::min(
+          1.0, estimated_bytes_per_row * right_path->num_output_rows() /
+                   m_thd->variables.join_buff_size);
+      return 1.0 - buffer_usage * buffer_usage;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Differ from the parameters' default value
+mysql,innodb_buf_pool_instances,"Double_write::s_n_instances = std::max(4UL, srv_buf_pool_instances * 2);",C->P,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,yes,Differ from the parameters' default value
+mysql,innodb_io_capacity,"srv_max_io_capacity = std::max(2 * srv_io_capacity, 2000UL);",C->P,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,yes,Differ from the parameters' default value
+mysql,innodb_page_size,"return std::max(std::max((ulong)srv_page_size, (ulong)IO_BLOCK_SIZE),(ulong)io_size);",C->P,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,no,Differ from the parameters' default value
+mysql,myisam_block_size,"share->blocksize = std::min(ulong{IO_SIZE}, myisam_block_size);",C->P,Performance,Environment Adaption,Resource Matching,/,unexpected results,/,no,Differ from the parameters' default value
+mysql,max_allowed_pocket,"  unsigned int max_event_size =
+      std::max(m_thd->variables.max_allowed_packet,
+               binlog_row_event_max_size + MAX_LOG_EVENT_HEADER);",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,yes,Differ from the parameters' default value
+mysql,max_allowed_pocket,"  mysql->field_alloc->set_max_capacity(
+      std::max(1024UL * 1024UL, mysql->net.max_packet_size));",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,yes,Differ from the parameters' default value
+mysql,innodb_purge_batch_size,"  n_pages_purged =
+      trx_purge(1,
+                srv_purge_batch_size <= temp_batch_size ? srv_purge_batch_size
+                                                        : temp_batch_size",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,yes,Differ from the parameters' default value
+mysql,innodb_log_buffer_size,"recv_sys->buf_len = std::min<unsigned long>(RECV_PARSING_BUF_SIZE, srv_log_buffer_size);",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,yes,Differ from the parameters' default value
+mysql,max_allowed_pocket,"  /* Binary event can be vary large. So set it to max allowed packet. */
+  thd->variables.max_allowed_packet = binary_log::max_log_event_size;",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,yes,"Fake configuration, Differ from the parameters' default value"
+mysql,innodb_lock_wait_timeout,"  /* Do not use user-supplied timeout value for system threads. */
+  thd->variables.lock_wait_timeout = LONG_TIMEOUT;",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,/,yes,"Fake configuration, Differ from the parameters' default value"
+mysql,default_storage_engine,"default_storage_engine = ""InnoDB"";",C->P,Functionality and Others,/,/,/,unexpected results,/,yes,"Fake configuration, Same as default value"
+mysql,clone_buffer_size,"  const uint32_t max_buffer_size = 128 * 1024 * 1024;
+  auto num_tasks = get_max_concurrency();
+
+  auto limit = max_buffer_size / num_tasks;
+
+  if (buffer_size > limit) {
+    buffer_size = limit;
+  }",C->P,Reliability,Misconfiguration Prevention,specious config,/,/,/,yes,/
+mysql,replica_allow_batching,"    if (m_thd->rli_slave->opt_replica_parallel_workers > 0) {
+      return false;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+mysql,binlog_cache_size,"  if (!cachesize && !(cachesize = my_default_record_cache_size))
+    return 1; /* No cache requested */",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+mysql,myisam_mmap_size,if (myisam_mmap_size != SIZE_T_MAX) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+mysql,connection_control_failed_connections_threshold,"  /* If feature was disabled, return */
+  if (threshold <= DISABLE_THRESHOLD) return error;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+nginx,proxy_headers_hash_bucket_size,"    if (hinit->max_size == 0) {
+        ngx_log_error(NGX_LOG_EMERG, hinit->pool->log, 0,
+                      ""could not build %s, you should ""
+                      ""increase %s_max_size: %i"",
+                      hinit->name, hinit->name, hinit->max_size);
+        return NGX_ERROR;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"        ngx_log_error(NGX_LOG_EMERG, hinit->pool->log, 0,
+                      ""could not build %s, you should ""
+                      ""increase %s_max_size: %i"",
+                      hinit->name, hinit->name, hinit->max_size);",yes,/
+nginx,quic_active_connection_id_limit,"    if (ctp->active_connection_id_limit < 2) {
+        qc->error = NGX_QUIC_ERR_TRANSPORT_PARAMETER_ERROR;
+        qc->error_reason = ""invalid active_connection_id_limit"";
+
+        ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                      ""quic active_connection_id_limit is invalid"");
+        return NGX_ERROR;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"        ngx_log_error(NGX_LOG_INFO, c->log, 0,
+                      ""quic active_connection_id_limit is invalid"");",yes,/
+nginx,client_max_body_size,"    if (r->headers_in.content_length_n != -1
+        && !r->discard_body
+        && clcf->client_max_body_size
+        && clcf->client_max_body_size < r->headers_in.content_length_n)
+    {
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+                      ""client intended to send too large body: %O bytes"",
+                      r->headers_in.content_length_n);
+
+        r->expect_tested = 1;
+        (void) ngx_http_discard_request_body(r);
+        ngx_http_finalize_request(r, NGX_HTTP_REQUEST_ENTITY_TOO_LARGE);
+        return NGX_OK;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
+""client intended to send too large body: %O bytes"",
+r->headers_in.content_length_n);",yes,/
+nginx,http2_body_preread_size,"    if (r->request_body_no_buffering || rb->filter_need_buffering) {
+
+        /*
+         * We need a room to store data up to the stream's initial window size,
+         * at least until this window will be exhausted.
+         */
+
+        if (len < (off_t) h2scf->preread_size) {
+            len = h2scf->preread_size;
+        }
+
+        if (len > NGX_HTTP_V2_MAX_WINDOW) {
+            len = NGX_HTTP_V2_MAX_WINDOW;
+        }
+    }
+
+    rb->buf = ngx_create_temp_buf(r->pool, (size_t) len);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Differ from the parameters' default value
+nginx,autoindex_localtime,"    if (t < 0) {
+        t = 0;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Differ from the parameters' default value
+nginx,map_hash_bucket_size,"    if (mcf->hash_bucket_size == NGX_CONF_UNSET_UINT) {
+        mcf->hash_bucket_size = ngx_cacheline_size;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Differ from the parameters' default value
+nginx,proxy_busy_buffers_size,"    if (conf->upstream.busy_buffers_size_conf == NGX_CONF_UNSET_SIZE) {
+        conf->upstream.busy_buffers_size = 2 * size;
+    } else {
+        conf->upstream.busy_buffers_size =
+                                         conf->upstream.busy_buffers_size_conf;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Differ from the parameters' default value
+nginx,map_hash_max_size,"    if (mcf->hash_max_size == NGX_CONF_UNSET_UINT) {
+        mcf->hash_max_size = 2048;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Same as default value
+nginx,http2_body_preread_size,"    if (!h2c->settings_ack
+        && !(h2c->state.flags & NGX_HTTP_V2_END_STREAM_FLAG)
+        && h2scf->preread_size < NGX_HTTP_V2_DEFAULT_WINDOW)
+    {
+        ngx_log_error(NGX_LOG_INFO, h2c->connection->log, 0,
+                      ""client sent stream with data ""
+                      ""before settings were acknowledged"");
+
+        status = NGX_HTTP_V2_REFUSED_STREAM;
+        goto rst_stream;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+nginx,image_filter_jpeg_quality,"        q = ngx_http_image_filter_get_value(r, conf->jqcv, conf->jpeg_quality);
+        if (q <= 0) {
+            return NULL;
+        }
+
+        out = gdImageJpegPtr(img, size, q);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+nginx,proxy_temp_file_write_size,"    if (conf->upstream.temp_file_write_size_conf == NGX_CONF_UNSET_SIZE) {
+        conf->upstream.temp_file_write_size = 2 * size;
+    } else {
+        conf->upstream.temp_file_write_size =
+                                      conf->upstream.temp_file_write_size_conf;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+nginx,uwsgi_ssl_trusted_certificate,"        if (glcf->ssl_trusted_certificate.len == 0) {
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
+                      ""no grpc_ssl_trusted_certificate for grpc_ssl_verify"");
+            return NGX_ERROR;
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,max_wal_senders,"	if (max_wal_senders > 0 && wal_level == WAL_LEVEL_MINIMAL)
+		ereport(ERROR,
+				(errmsg(""WAL streaming (max_wal_senders > 0) requires wal_level \""replica\"" or \""logical\"""")));",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"		ereport(ERROR,
+				(errmsg(""WAL streaming (max_wal_senders > 0) requires wal_level \""replica\"" or \""logical\"""")));",yes,/
+postgresql,wal_decode_buffer_size,"		if (state->decode_buffer_size == 0)
+			state->decode_buffer_size = DEFAULT_DECODE_BUFFER_SIZE;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,yes,Same as default value
+postgresql,temp_file_limit,if (temp_file_limit >= 0 && (vfdP->fdstate & FD_TEMP_FILE_LIMIT)),C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,wal_receiver_status_interval,"	if ((wal_receiver_status_interval <= 0 || !hot_standby_feedback) &&
+		!primary_has_standby_xmin)
+		return;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,XLogArchiveTimeout,		if (XLogArchiveTimeout > 0 && !RecoveryInProgress()),C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,autovacuum_vac_cost_limit,"		if (autovacuum_vac_cost_limit > 0)
+			vacuum_cost_limit = autovacuum_vac_cost_limit;
+		else
+			vacuum_cost_limit = VacuumCostLimit;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,checkpoint_flush_after,"	if (*wb_context->max_pending > 0)
+	{
+		Assert(*wb_context->max_pending <= WRITEBACK_MAX_PENDING_FLUSHES);
+
+		pending = &wb_context->pending_writebacks[wb_context->nr_pending++];
+
+		pending->tag = *tag;
+	}",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,effective_io_concurrency,"	if (prefetch_maximum)
+	{",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,extra_float_digits,"	if (extra_float_digits > 0)
+	{
+		double_to_shortest_decimal_buf(num, ascii);
+		return ascii;
+	}",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,huge_page_size,if (huge_page_size != 0),C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,Log_RotationSize,if (Log_RotationSize > 0),C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,log_temp_files,	if (log_temp_files >= 0),C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,max_predicate_locks_per_relation,"			return max_predicate_locks_per_relation < 0
+				? (max_predicate_locks_per_xact
+				   / (-max_predicate_locks_per_relation)) - 1
+				: max_predicate_locks_per_relation;",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,yes,/
+postgresql,Nbuffers,"Size
+CLOGShmemBuffers(void)
+{
+	return Min(128, Max(4, NBuffers / 512));
+}",C->P,Performance,Environment Adaption,Resource Matching,/,/,/,yes,/
+postgresql,autovacuum_vac_cost_limit,"vacuum_cost_limit = Max(vacuum_cost_limit / nworkers_for_balance, 1);",C->P,Reliability,Misconfiguration Prevention,specious config,/,/,/,yes,/
+postgresql,huge_pages,"	if (huge_pages == HUGE_PAGES_ON || huge_pages == HUGE_PAGES_TRY)
+	{",C->P,Functionality and Others,/,/,/,/,/,yes,/
+postgresql,log_min_messages,"	if (log_min_messages < WARNING)
+		(void) set_config_option_ext(""log_min_messages"", ""warning"",
+									 PGC_SUSET, PGC_S_SESSION,
+									 BOOTSTRAP_SUPERUSERID,
+									 GUC_ACTION_SAVE, true, 0, false);",C->P,Functionality and Others,/,/,/,/,/,yes,/
+yarn,GPG_SUBCLUSTER_CLEANER_INTERVAL_MS,    if (scCleanerIntervalMs > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"      LOG.info(""Scheduled sub-cluster cleaner with interval: {}"",
+          DurationFormatUtils.formatDurationISO(scCleanerIntervalMs));",no,/
+yarn,ROUTER_USER_CLIENT_THREADS_SIZE,"    if (StringUtils.isNotBlank(threadSize)) {
+      LOG.warn(""{} is a deprecated property, "" +
+          ""please remove it, use {} to configure the minimum number of thread pool."",
+          YarnConfiguration.ROUTER_USER_CLIENT_THREADS_SIZE,
+          YarnConfiguration.ROUTER_USER_CLIENT_THREAD_POOL_MINIMUM_POOL_SIZE);
+      return Integer.parseInt(threadSize);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"      LOG.warn(""{} is a deprecated property, "" +
+          ""please remove it, use {} to configure the minimum number of thread pool."",
+          YarnConfiguration.ROUTER_USER_CLIENT_THREADS_SIZE,
+          YarnConfiguration.ROUTER_USER_CLIENT_THREAD_POOL_MINIMUM_POOL_SIZE);",no,/
+yarn,NM_LOG_AGGREGATION_THREAD_POOL_SIZE,"    if(threadPoolSize <= 0) {
+      LOG.warn(""Invalid thread pool size. Setting it to the default value "" +
+          ""in YarnConfiguration"");
+      threadPoolSize = YarnConfiguration.
+          DEFAULT_NM_LOG_AGGREGATION_THREAD_POOL_SIZE;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,"      LOG.warn(""Invalid thread pool size. Setting it to the default value "" +
+          ""in YarnConfiguration"");",no,/
+yarn,CLIENT_FAILOVER_MAX_ATTEMPTS,"      if (maxFailoverAttempts == -1) {
+        if (waitForEver) {
+          maxFailoverAttempts = Integer.MAX_VALUE;
+        } else {
+          maxFailoverAttempts = (int) (rmConnectWaitMS / failoverSleepBaseMs);
+        }
+      }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+yarn,AM_SCHEDULING_NODE_BLACKLISTING_ENABLED,"    if (amBlacklistingEnabled) {
+      blacklistDisableThreshold = conf.getFloat(
+          YarnConfiguration.AM_SCHEDULING_NODE_BLACKLISTING_DISABLE_THRESHOLD,
+          YarnConfiguration.
+          DEFAULT_AM_SCHEDULING_NODE_BLACKLISTING_DISABLE_THRESHOLD);
+      // Verify whether blacklistDisableThreshold is valid. And for invalid
+      // threshold, reset to global level blacklistDisableThreshold
+      // configured.
+      if (blacklistDisableThreshold < MINIMUM_AM_BLACKLIST_THRESHOLD_VALUE ||
+          blacklistDisableThreshold > MAXIMUM_AM_BLACKLIST_THRESHOLD_VALUE) {
+        blacklistDisableThreshold = YarnConfiguration.
+            DEFAULT_AM_SCHEDULING_NODE_BLACKLISTING_DISABLE_THRESHOLD;
+      }
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+yarn,TIMELINE_SERVICE_READ_AUTH_ENABLED,"    if (isWhitelistReadAuthEnabledStr == null) {
+      isWhitelistReadAuthEnabled =
+          YarnConfiguration.DEFAULT_TIMELINE_SERVICE_READ_AUTH_ENABLED;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Same as default value
+yarn,IN_MEMORY_STALENESS_PERIOD_MINS,"    int stalenessMinutes =
+        conf.getInt(YarnConfiguration.IN_MEMORY_STALENESS_PERIOD_MINS,
+            YarnConfiguration.DEFAULT_IN_MEMORY_STALENESS_PERIOD_MINS);
+    // non-positive value is invalid; use the default
+    if (stalenessMinutes <= 0) {
+      throw new HadoopIllegalArgumentException(""Non-positive staleness value: ""
+          + stalenessMinutes
+          + "". The staleness value must be greater than zero."");
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+yarn,RM_AM_MAX_ATTEMPTS,"    if (rmMaxAppAttempts <= 0) {
+      throw new YarnRuntimeException(""Invalid rm am max attempts configuration""
+          + "", "" + YarnConfiguration.RM_AM_MAX_ATTEMPTS
+          + ""="" + rmMaxAppAttempts + "", it should be a positive integer."");
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+yarn,RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES,"    if (minVcores <= 0 || minVcores > maxVcores) {
+      throw new YarnRuntimeException(""Invalid resource scheduler vcores""
+              + "" allocation configuration""
+              + "", "" + YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_VCORES
+              + ""="" + minVcores
+              + "", "" + YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_VCORES
+              + ""="" + maxVcores + "", min and max should be greater than 0""
+              + "", max should be no smaller than min."");
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+yarn,RM_TIMELINE_SERVER_V1_PUBLISHER_DISPATCHER_BATCH_SIZE,"      if (dispatcherBatchSize <= 1) {
+        throw new IllegalArgumentException(
+            ""RM_TIMELINE_SERVER_V1_PUBLISHER_DISPATCHER_BATCH_SIZE should be greater than 1"");
+      }      sendEventThreadPool = Executors.newFixedThreadPool(dispatcherPoolSize);
+      entityQueue = new LinkedBlockingQueue<>(dispatcherBatchSize + 1);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+yarn,NM_CLIENT_ASYNC_THREAD_POOL_MAX_SIZE,"              int newThreadPoolSize = Math.min(maxThreadPoolSize,
+                  idealThreadPoolSize + INITIAL_THREAD_POOL_SIZE);",C->P,Functionality and Others,/,/,/,unexpected results,/,no,/
+yarn,RM_EPOCH_RANGE,"    if (epochRange > 0) {
+      epochVal %= epochRange;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,ROUTER_CLIENTRM_SUBMIT_RETRY,"    if (actualRetryNums < 0) {
+      return 0;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,FEDERATION_AMRMPROXY_REGISTER_UAM_RETRY_COUNT,if (this.registerUamRetryNum <= 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,DistributedOpportunisticContainerAllocator,if (maxAllocationsPerAMHeartbeat > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,FLOW_NAME_MAX_SIZE,"    if (length <= 0) {
+      return flowName;
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,NM_OPPORTUNISTIC_CONTAINERS_MAX_QUEUE_LENGTH,"        if (maxOppQueueLength <= 0) {
+          isQueued = false;
+",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,RM_NODE_IP_CACHE_EXPIRY_INTERVAL_SECS,"    if (nodeIpCacheTimeout <= 0) {
+      resolver = new DirectResolver();",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,TIMELINE_SERVICE_CLIENT_MAX_RETRIES,"      Preconditions.checkArgument(
+          conf.getInt(YarnConfiguration.TIMELINE_SERVICE_CLIENT_MAX_RETRIES,
+              YarnConfiguration.DEFAULT_TIMELINE_SERVICE_CLIENT_MAX_RETRIES)
+              >= -1,
+          ""%s property value should be greater than or equal to -1"",
+          YarnConfiguration.TIMELINE_SERVICE_CLIENT_MAX_RETRIES);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,TIMELINE_SERVICE_HANDLER_THREAD_COUNT,"    Preconditions.checkArgument(conf.getInt(
+        YarnConfiguration.TIMELINE_SERVICE_HANDLER_THREAD_COUNT,
+        YarnConfiguration.DEFAULT_TIMELINE_SERVICE_CLIENT_THREAD_COUNT) > 0,
+        ""%s property value should be greater than zero"",
+        YarnConfiguration.TIMELINE_SERVICE_HANDLER_THREAD_COUNT);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,TIMELINE_SERVICE_LEVELDB_MAX_OPEN_FILES,"    Preconditions.checkArgument(conf.getLong(
+        TIMELINE_SERVICE_LEVELDB_MAX_OPEN_FILES,
+        DEFAULT_TIMELINE_SERVICE_LEVELDB_MAX_OPEN_FILES) > 0,
+        ""%s property value should be greater than zero"",
+        TIMELINE_SERVICE_LEVELDB_MAX_OPEN_FILES);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,TIMELINE_SERVICE_LEVELDB_READ_CACHE_SIZE,"    Preconditions.checkArgument(conf.getLong(
+        TIMELINE_SERVICE_LEVELDB_READ_CACHE_SIZE,
+        DEFAULT_TIMELINE_SERVICE_LEVELDB_READ_CACHE_SIZE) >= 0,
+        ""%s property value should be greater than or equal to zero"",
+        TIMELINE_SERVICE_LEVELDB_READ_CACHE_SIZE);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+yarn,TIMELINE_SERVICE_LEVELDB_START_TIME_WRITE_CACHE_SIZE,"    Preconditions.checkArgument(conf.getLong(
+        YarnConfiguration.TIMELINE_SERVICE_LEVELDB_START_TIME_WRITE_CACHE_SIZE,
+        YarnConfiguration.DEFAULT_TIMELINE_SERVICE_LEVELDB_START_TIME_WRITE_CACHE_SIZE) > 0,
+        ""%s property value should be greater than zero"",
+        YarnConfiguration.TIMELINE_SERVICE_LEVELDB_START_TIME_WRITE_CACHE_SIZE);",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+zookeeper,zookeeper.commitLogCount,"            if (commitLogCount < DEFAULT_COMMIT_LOG_COUNT) {
+                commitLogCount = DEFAULT_COMMIT_LOG_COUNT;
+                LOG.warn(
+                    ""The configured commitLogCount {} is less than the recommended {}, going to use the recommended one"",
+                    COMMIT_LOG_COUNT,
+                    DEFAULT_COMMIT_LOG_COUNT);
+            }",C->P,Reliability,Misconfiguration Prevention,specious config,/,unexpected results,"LOG.warn(
+""The configured commitLogCount {} is less than the recommended {}, going to use the recommended one"",
+ COMMIT_LOG_COUNT,                    DEFAULT_COMMIT_LOG_COUNT);",no,Same as default value
+zookeeper,zookeeper.connection_throttle_global_session_weight,"        if (globalWeight <= 0) {
+            LOG.warn(""Invalid global session weight {}. It should be larger than 0"", globalWeight);
+            DEFAULT_GLOBAL_SESSION_WEIGHT = 3;
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,"LOG.warn(""Invalid global session weight {}. It should be larger than 0"", globalWeight);",no,Same as default value
+zookeeper,zookeeper.connection_throttle_drop_increase,"        if (diff > freezeTime) {
+            if ((length == limit) && (drop < 1)) {
+                drop = Math.min(drop + dropIncrease, 1);
+            } else if ((length <= threshold) && (drop > 0)) {
+                drop = Math.max(drop - dropDecrease, 0);
+            }
+            lastFreeze = now;
+        }
+
+        return !(rng.nextDouble() < drop);
+    }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,unexpected results,/,no,Differ from the parameters' default value
+zookeeper,zookeeper.watcherCleanThreadsNum,"        while (maxInProcessingDeadWatchers > 0 && !stopped && totalDeadWatchers.get() >= maxInProcessingDeadWatchers) {
+            try {
+                RATE_LOGGER.rateLimitLog(""Waiting for dead watchers cleaning"");
+                long startTime = Time.currentElapsedTime();
+                synchronized (processingCompletedEvent) {
+                    processingCompletedEvent.wait(100);
+                }
+                long latency = Time.currentElapsedTime() - startTime;
+                ServerMetrics.getMetrics().ADD_DEAD_WATCHER_STALL_TIME.add(latency);
+            } catch (InterruptedException e) {
+                LOG.info(""Got interrupted while waiting for dead watches queue size"");
+                break;
+            }
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+zookeeper,zookeeper.commitProcessor.maxCommitBatchSize,"        if (maxCommitBatchSize <= 0) {
+            String errorMsg = ""maxCommitBatchSize must be positive, was "" + maxCommitBatchSize;
+            throw new IllegalArgumentException(errorMsg);
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+zookeeper,zookeeper.leader.maxConcurrentSnapSyncs,"        if (maxConcurrentSyncs <= 0) {
+            String errorMsg = ""maxConcurrentSyncs must be positive, was "" + maxConcurrentSyncs;
+            throw new IllegalArgumentException(errorMsg);
+        }",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,runtime error,/,no,/
+zookeeper,zookeeper.commitProcessor.maxReadBatchSize,"                while (!stopped
+                       && requestsToProcess > 0
+                       && (maxReadBatchSize < 0 || readsProcessed <= maxReadBatchSize)
+                       && (request = queuedRequests.poll()) != null) {",C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+zookeeper,zookeeper.maxBatchSize,return (maxBatchSize > 0) && (toFlush.size() >= maxBatchSize);,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/
+zookeeper,zookeeper.request_throttle_max_requests,if (maxRequests > 0) {,C->P,Reliability,Misconfiguration Prevention,Invalid config,/,/,/,no,/

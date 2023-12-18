@@ -1,0 +1,213 @@
+Software,Parameter,Code Snippet,Code Pattern,Overall Impact,Effect on Software Behavior,How to Control Software Behavior,Special Effect on Software,Bad consequences,Log Information,On-the-fly Update,"The ""Crisis"" Behind Specific Interactions"
+hbase,hbase.regionserver.region.split.threads.max,"    // Max #threads is the smaller of the number of storefiles or the default max determined above.
+    int maxThreads = Math.min(
+      conf.getInt(HConstants.REGION_SPLIT_THREADS_MAX,
+        conf.getInt(HStore.BLOCKING_STOREFILES_KEY, HStore.DEFAULT_BLOCKING_STOREFILE_COUNT)),
+      nbFiles);
+    LOG.info(""pid="" + getProcId() + "" splitting "" + nbFiles + "" storefiles, region=""
+      + getParentRegion().getShortNameToLog() + "", threads="" + maxThreads);
+    final ExecutorService threadPool = Executors.newFixedThreadPool(maxThreads,
+      new ThreadFactoryBuilder().setNameFormat(""StoreFileSplitter-pool-%d"").setDaemon(true)
+        .setUncaughtExceptionHandler(Threads.LOGGING_EXCEPTION_HANDLER).build());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"    LOG.info(""pid="" + getProcId() + "" splitting "" + nbFiles + "" storefiles, region=""
+      + getParentRegion().getShortNameToLog() + "", threads="" + maxThreads);",no,Lack of full adaption
+hbase,hbase.hregion.open.and.init.threads.max,"    int maxThreads =
+      Math.min(regionNumber, conf.getInt(""hbase.hregion.open.and.init.threads.max"", 16));
+    ThreadPoolExecutor regionOpenAndInitThreadPool = Threads.getBoundedCachedThreadPool(maxThreads,
+      30L, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat(threadNamePrefix + ""-pool-%d"")
+        .setDaemon(true).setUncaughtExceptionHandler(Threads.LOGGING_EXCEPTION_HANDLER).build());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hbase,hbase.replication.source.maxthreads,"int n = Math.min(Math.min(this.maxThreads, entries.size() / 100 + 1), numSinks);
+    List<List<Entry>> entryLists =
+      Stream.generate(ArrayList<Entry>::new).limit(n).collect(Collectors.toList());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hbase,hbase.storescanner.pread.max.bytes,"conf.getLong(StoreScanner.STORESCANNER_PREAD_MAX_BYTES, 4 * blockSize)",V->P,Performance,Workload Adaption,Resource Tunning,/,Performance Degradation,/,no,Lack of necessary adjustment to user-set values
+hdfs,dfs.balancer.getBlocks.size,"      final long size = Math.min(getBlocksSize, blocksToReceive);
+      final BlocksWithLocations newBlksLocs =
+          nnc.getBlocks(getDatanodeInfo(), size, getBlocksMinBlockSize,
+              hotBlockTimeInterval);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"          LOG.trace(this + "" blocksToReceive="" + blocksToReceive
+              + "", scheduledSize="" + getScheduledSize()
+              + "", srcBlocks#="" + srcBlocks.size());
+        }",no,Lack of full adaption
+hdfs,DFS_BALANCER_DISPATCHERTHREADS_KEY,"    int concurrentThreads = Math.min(sources.size(),
+        ((ThreadPoolExecutor)dispatchExecutor).getCorePoolSize());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hdfs,dfs.namenode.invalidate.work.pct.per.iteration,"nodesToProcess = Math.min(nodes.size(), nodesToProcess);",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,Performance Degradation,/,no,Lack of full adaption
+hdfs,nfs.rtmax,"      int buffSize = Math.min(rtmax, count);
+      byte[] readbuffer = new byte[buffSize];",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,Performance Degradation,/,no,Lack of full adaption
+hdfs,dfs.datanode.volumes.replica-add.threadpool.size,"      int numberOfBlockPoolSlice = dataset.getVolumeCount()
+          * dataset.getBPServiceCount();
+      int poolsize = Math.max(numberOfBlockPoolSlice,
+          VOLUMES_REPLICA_ADD_THREADPOOL_SIZE);
+      // Default pool sizes is max of (volume * number of bp_service) and
+      // number of processor.
+      addReplicaThreadPool = new ForkJoinPool(conf.getInt(
+          DFSConfigKeys.DFS_DATANODE_VOLUMES_REPLICA_ADD_THREADPOOL_SIZE_KEY,
+          poolsize));",V->P,Performance,Workload Adaption,Resource Tunning,/,Performance Degradation,/,no,Lack of full adaption
+hdfs,dfs.client-write-packet-size,"      computePacketChunkSize(
+          Math.min(dfsClient.getConf().getWritePacketSize(), freeInLastBlock),
+          bytesPerChecksum);",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,/,unexpected results,/,no,Lack of full adaption
+hdfs,dfs.namenode.list.openfiles.num.responses,"    final int numResponses = Math.min(
+        this.fsnamesystem.getMaxListOpenFilesResponses(), inodeIds.size());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hdfs,dfs.image.transfer.chunksize,"      int chunkSize = (int) conf.getLongBytes(
+          DFSConfigKeys.DFS_IMAGE_TRANSFER_CHUNKSIZE_KEY,
+          DFSConfigKeys.DFS_IMAGE_TRANSFER_CHUNKSIZE_DEFAULT);
+      if (imageFile.length() > chunkSize) {
+        // using chunked streaming mode to support upload of 2GB+ files and to
+        // avoid internal buffering.
+        // this mode should be used only if more than chunkSize data is present
+        // to upload. otherwise upload may not happen sometimes.
+        connection.setChunkedStreamingMode(chunkSize);
+      }",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,unexpected results,/,no,/
+hdfs,DFS_BALANCER_MOVERTHREADS_KEY,final int allocated = remaining < n? remaining: n;,V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,/
+hive,hive.exec.reducers.bytes.per.reducer,"double bytes = Math.max(totalInputFileSize, bytesPerReducer);",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,"      LOG.info(""BytesPerReducer={} maxReducers={} estimated totalInputFileSize={}"", bytesPerReducer,
+        maxReducers, totalInputFileSize);",no,Lack of full adaption
+hive,hive.exec.reducers.max,"reducers = Math.min(maxReducers, reducers);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"    if (totalInputFileSize != inputSummary.getLength()) {
+      LOG.info(""BytesPerReducer={} maxReducers={} estimated totalInputFileSize={}"", bytesPerReducer,
+        maxReducers, totalInputFileSize);
+    } else {
+      LOG.info(""BytesPerReducer={} maxReducers={} totalInputFileSize={}"", bytesPerReducer,
+        maxReducers, totalInputFileSize);
+    }",no,Lack of full adaption
+hive,PARTITION_MANAGEMENT_TASK_THREAD_POOL_SIZE,"        int threadPoolSize = MetastoreConf.getIntVar(conf,
+          MetastoreConf.ConfVars.PARTITION_MANAGEMENT_TASK_THREAD_POOL_SIZE);
+        final ExecutorService executorService = Executors
+          .newFixedThreadPool(Math.min(candidates.size(), threadPoolSize),
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat(""PartitionDiscoveryTask-%d"").build());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"LOG.info(""Found {} candidate tables for partition discovery"", candidates.size());",no,Lack of full adaption
+hive,hive.basic.stats.max.threads.factor,"int numThreads = Math.min(fileList.size(), numThreadsFactor * Runtime.getRuntime().availableProcessors());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"LOG.info(""Processing Stats for {} file using {} threads"", fileList.size(), numThreads);",no,Lack of full adaption
+hive,hive.mapjoin.optimized.hashtable.wbsize,"    writeBufferSize = writeBufferSize < minWbSize ? minWbSize : Math.min(maxWbSize / numPartitions, writeBufferSize);
+    LOG.info(""Write buffer size: "" + writeBufferSize);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hive,hive.exec.orc.blob.storage.split.size,"Math.min(splitSize, logicalLen - start)",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,Performance Degradation,/,no,Lack of full adaption
+hive,hive.metastore.batch.retrieve.table.partition.max,"int endIndex = Math.min(listIndex + fileMetadataBatchSize, fileIds.size());",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,/,Performance Degradation,/,no,Lack of full adaption
+hive,hive.orc.compute.splits.num.threads,"int numThreads = min(HiveConf.getIntVar(conf, ConfVars.HIVE_COMPUTE_SPLITS_NUM_THREADS), dirs.size());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,Performance Degradation,/,no,Lack of full adaption
+hive,hive.orc.compute.splits.num.threads,"int fetcherPoolParallelism = Math.min(maxAsyncLookupCount, numberOfUnmanagedPaths);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,Performance Degradation,/,no,Lack of full adaption
+hive,hive.metastore.batch.retrieve.max,"        int nextBatchEnd = Math.min(partNames.size(), nextBatchStart + this.batchSize);
+        List<String> currentNames = partNames.subList(nextBatchStart, nextBatchEnd);",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hive,hive.metastore.direct.sql.batch.size,"      toIndex = Math.min(fromIndex + batchSize, input.size());
+      List<I> batchedInput = input.subList(fromIndex, toIndex);",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hive,hive.repl.load.partitions.batch.size,"      int pendingPartitionCount = totalPartitionCount - currentPartitionCount;
+      int toPartitionCount = currentPartitionCount + Math.min(pendingPartitionCount, maxTasks);
+      List<AlterTableAddPartitionDesc> partitionBatch = partitionDescs.subList(currentPartitionCount,
+        toPartitionCount);",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hive,hive.mapjoin.optimized.hashtable.wbsize,"maxProbeSize = Math.max(maxProbeSize, wbSize);",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,no,Lack of full adaption
+hive,hive.exec.reducers.max,"targetCount = Math.min(maxReducers, (int) Math.ceil(minReducersPerExec * executorCount));
+reduceWork.setNumReduceTasks(Math.max(reduceWork.getNumReduceTasks(), targetCount));",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+hive,hive.llap.io.encode.alloc.size,"    if (allocSize > maxAllocSize) {
+      LlapIoImpl.LOG.error(""Encode allocation size "" + allocSize + "" is being capped to the maximum ""
+          + ""allocation size "" + bufferManager.getAllocator().getMaxAllocation());
+      allocSize = maxAllocSize;
+    }",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,/,/,no,/
+mapreduce,mapreduce.terasort.num.partitions,"    int samples =
+        Math.min(conf.getInt(TeraSortConfigKeys.NUM_PARTITIONS.key(),
+                             TeraSortConfigKeys.DEFAULT_NUM_PARTITIONS),
+            splits.size());",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"System.out.println(""Sampling "" + samples + "" splits of "" + splits.size());",no,Lack of full adaption
+mapreduce,mapreduce.job.speculative.speculative-cap-running-tasks,"      numberAllowedSpeculativeTasks
+          = (int) Math.max(numberAllowedSpeculativeTasks,
+              proportionRunningTasksSpeculatable * numberRunningTasks);",V->P,Performance,Workload Adaption,Resource Tunning,/,Performance Degradation,/,no,Lack of full adaption
+mapreduce,mapreduce.shuffle.transfer.buffer.size,"    ByteBuffer byteBuffer = ByteBuffer.allocate(
+            Math.min(
+                    this.shuffleBufferSize,
+                    trans > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) trans));",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,Performance Degradation,/,no,Lack of full adaption
+mapreduce,mapreduce.job.reduces,"      int actualMax = Math.min(maxEvents,
+          (eventList.size() - startIndex));",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+mapreduce,mapreduce.task.io.sort.mb,if (bufindex + len > bufvoid) {,V->P,Reliability,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,/,/,no,/
+mysql,innodb_log_buffer_size,"  recv_sys->buf_len = ((recv_sys->buf_len * 2) >= srv_log_buffer_size)
+                          ? srv_log_buffer_size
+                          : recv_sys->buf_len * 2;",V->P,Reliability,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"  if (recv_sys->buf_len == srv_log_buffer_size) {
+    ib::error(ER_IB_MSG_723, srv_log_buffer_size);
+    return false;
+  }",yes,/
+mysql,ndb_blob_read_batch_bytes,"          const Uint32 remainingQuota = 
+            theNdbCon->maxPendingBlobReadBytes - 
+            MIN(theNdbCon->maxPendingBlobReadBytes, theNdbCon->pendingBlobReadBytes);",V->P,Performance,Workload Adaption,Resource Tunning,/,Performance Degradation,/,yes,Lack of full adaption
+mysql,myisam_block_size,"    max_key_block_length =
+        std::max(max_key_block_length, uint(keydef->block_length));",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,/,unexpected results,/,no,Lack of full adaption
+mysql,max_allowed_pocket,"  for (block_len = (uint)(my_b_get_bytes_in_buffer(file)); block_len > 0;
+       buffer += min(block_len, max_event_size),
+      block_len -= min(block_len, max_event_size)) {",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,unexpected results,/,yes,Lack of full adaption
+mysql,innodb_buf_pool_instances,"max_id = std::max((int)srv_buf_pool_instances, ids.back() + 1);",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,no,Lack of full adaption
+mysql,innodb_page_size,"return std::max(std::max((ulong)srv_page_size, (ulong)IO_BLOCK_SIZE),(ulong)io_size);",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,no,Lack of full adaption
+mysql,innodb_redo_log_capacity_used,"  m_target_physical_capacity = m_current_physical_capacity =
+      std::max(max_t, os_offset_t{srv_redo_log_capacity_used});",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,yes,Lack of full adaption
+mysql,myisam_sort_buffer_size,"  const size_t min_merge_buffer_size = (file_ptrs.size() + 1) * size;
+  const size_t merge_buffer_size =
+      std::max(min_merge_buffer_size, static_cast<size_t>(max_in_memory_size));",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,yes,Lack of full adaption
+mysql,preload_buffer_size,"  length = info->preload_buff_size / block_length * block_length;
+  length = std::max(length, block_length);",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,yes,Lack of full adaption
+mysql,innodb_max_undo_tablespace_size,"  page_no_t trunc_size = std::max(
+      static_cast<page_no_t>(srv_max_undo_tablespace_size / srv_page_size),
+      fil_space_get_undo_initial_size(m_id));",V->P,Reliability,Workload Adaption,Resource Tunning,/,unexpected results,/,yes,Lack of full adaption
+mysql,max_sort_length,"sortorder->length = std::min(sortorder->length, max_sort_length_even);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,yes,Lack of full adaption
+mysql,tmp_table_size,"    share->max_rows = (ha_rows)(((share->db_type() == heap_hton)
+                                     ? min(thd->variables.tmp_table_size,
+                                           thd->variables.max_heap_table_size)
+                                     : thd->variables.tmp_table_size) /
+                                share->reclength);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,yes,Lack of full adaption
+mysql,binlog_cache_size,"      if ((my_off_t)cachesize > end_of_file - seek_offset + IO_SIZE * 2 - 1) {
+        cachesize = (size_t)(end_of_file - seek_offset) + IO_SIZE * 2 - 1;
+        use_async_io = false; /* No need to use async */
+      }",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,yes,/
+mysql,innodb_buf_pool_instances,"        pct_for_lsn > 30 ? page_cleaner->slots[i].n_pages_requested * n_pages /
+                                   sum_pages_for_lsn +
+                               1
+                         : n_pages / srv_buf_pool_instances + 1;",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,no,/
+mysql,innodb_page_size,"  auto n_pages = UNDO_INITIAL_SIZE_IN_PAGES;
+
+  /* If the default extend amount has been increased greater than the default
+  and it has been less than 1 second since the last time the file was extended,
+  then we consider the undo tablespace to be growing aggressively. */
+  if (space != nullptr && space->m_undo_extend > UNDO_INITIAL_SIZE_IN_PAGES &&
+      space->m_last_extended.elapsed() < 1000) {
+    /* UNDO is being extended aggressively, don't reduce size to default. */
+    n_pages = fil_space_get_size(old_space_id) / 4;
+  }",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,no,/
+mysql,innodb_parallel_read_threads,"auto n_threads = Parallel_reader::available_threads(max_threads, false);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,yes,/
+mysql,myisam_mmap_size,"      eom = data_file_length >
+            myisam_mmap_size - myisam_mmap_used - MEMMAP_EXTRA_MARGIN;",V->P,Reliability,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,yes,/
+mysql,optimizer_trace_max_mem_size,"  const size_t rc =
+      (mem_size <= pimpl->max_mem_size) ? (pimpl->max_mem_size - mem_size) : 0;",V->P,Reliability,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,/,/,yes,/
+nginx,large_client_header_buffers,"    if (r->state != 0
+        && (size_t) (r->header_in->pos - old)
+                                     >= cscf->large_client_header_buffers.size)
+    {
+        return NGX_DECLINED;
+    }...
+        b = ngx_create_temp_buf(r->connection->pool,
+                                cscf->large_client_header_buffers.size);",V->P,Reliability,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,Performance Degradation,/,yes,Lack of full adaption
+nginx,http2_chunk_size,"    frame_size = (h2lcf->chunk_size < h2c->frame_size)
+                 ? h2lcf->chunk_size : h2c->frame_size;",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,yes,Lack of full adaption
+nginx,grpc_buffer_size,"    ngx_conf_merge_size_value(conf->upstream.buffer_size,
+                              prev->upstream.buffer_size,
+                              (size_t) ngx_pagesize);",V->P,Performance,Workload Adaption,Resource Tunning,/,Performance Degradation,/,yes,Lack of necessary adjustment to user-set values
+nginx,large_client_header_buffers,"                r->headers_in.content_length_n = ngx_max(rb->chunked->length,
+                               (off_t) cscf->large_client_header_buffers.size);",V->P,Reliability,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,yes,/
+nginx,http2_body_preread_size,"    if (r->request_body_no_buffering || rb->filter_need_buffering) {
+
+        /*
+         * We need a room to store data up to the stream's initial window size,
+         * at least until this window will be exhausted.
+         */
+        if (len < (off_t) h2scf->preread_size) {
+            len = h2scf->preread_size;
+        }
+
+        if (len > NGX_HTTP_V2_MAX_WINDOW) {
+            len = NGX_HTTP_V2_MAX_WINDOW;
+        }
+    }
+
+    rb->buf = ngx_create_temp_buf(r->pool, (size_t) len);",V->P,Performance,Workload Adaption,Resource Tunning,/,unexpected results,/,yes,/
+nginx,proxy_buffer_size,"    if (size <= pool->max) {
+        return ngx_palloc_small(pool, size, 0);
+    }",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,/,/,yes,/
+postgresql,max_files_per_process,"max_safe_fds = Min(usable_fds, max_files_per_process - already_open);",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,/,Performance Degradation,/,yes,Lack of full adaption
+postgresql,max_parallel_maintenance_workers,"parallel_workers = Min(parallel_workers, max_parallel_maintenance_workers);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,Performance Degradation,/,yes,Lack of full adaption
+yarn,NM_CLIENT_ASYNC_THREAD_POOL_MAX_SIZE,"int idealThreadPoolSize = Math.min(maxThreadPoolSize, nodeNum);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,"              LOG.info(""Set NMClientAsync thread pool size to {} "" +
+                  ""as the number of nodes to talk to is {}."", newThreadPoolSize, nodeNum);",no,Lack of full adaption
+yarn,NM_CLIENT_ASYNC_THREAD_POOL_MAX_SIZE,"    // Start with a default core-pool size and change it dynamically.
+    int initSize = Math.min(INITIAL_THREAD_POOL_SIZE, maxThreadPoolSize);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+yarn,FEDERATION_GPG_LOAD_BASED_MAX_EDIT,"    // Keep the top N loaded sub clusters
+    scs = scs.subList(0, Math.min(maxEdit, scs.size()));",V->P,Reliability,Workload Adaption,Out-of-Bounds Prevention,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+yarn,ROUTER_CLIENTRM_SUBMIT_RETRY,"int actualRetryNums = Math.min(activeSubClustersCount, numSubmitRetries);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+yarn,NM_CLIENT_ASYNC_THREAD_POOL_MAX_SIZE,"              int newThreadPoolSize = Math.min(maxThreadPoolSize,
+                  idealThreadPoolSize + INITIAL_THREAD_POOL_SIZE);",V->P,Performance,Workload Adaption,Resource Tunning,Prevent excessive resource utilization,unexpected results,/,no,Lack of full adaption
+zookeeper,zookeeper.nio.numSelectorThreads,"        numSelectorThreads = Integer.getInteger(
+            ZOOKEEPER_NIO_NUM_SELECTOR_THREADS,
+            Math.max((int) Math.sqrt((float) numCores / 2), 1));",V->P,Performance,Workload Adaption,Resource Tunning,/,Performance Degradation,/,no,Lack of necessary adjustment to user-set values
+zookeeper,zookeeper.nio.numWorkerThreads,"numWorkerThreads = Integer.getInteger(ZOOKEEPER_NIO_NUM_WORKER_THREADS, 2 * numCores);",V->P,Performance,Workload Adaption,Resource Tunning,/,Performance Degradation,/,no,Lack of necessary adjustment to user-set values
